@@ -1841,6 +1841,23 @@ function addLanc(){
   if(!data){showError('Informe a Data do lançamento.');document.getElementById('e-dat').focus();return}
   if(!val){showError('Informe o Valor Investido.');return}
   const lanc = {ger,cons,ind,fra,tipo,tipoAp:'',soc:'',verba,medico,status,mes,data,val,_tipo_origem:'rn',_id:null};
+  // Se modo edição, remover item anterior
+  if(window._editMode && _editOldItem){
+    const eSrc = _editSource;
+    const eIdx = _editIdx;
+    const old = _editOldItem;
+    if(old.fra && old.val) updateTotals(old.fra, old.cons, old.mes, old.val, old.status, -1);
+    const oldId = old.id || old._id;
+    if(oldId) _deletedIds.add(oldId);
+    if(eSrc==='hist') HIST.splice(eIdx,1);
+    else { const si = D.sess.findIndex(x=>x===old||x.id===oldId); if(si>=0) D.sess.splice(si,1); }
+    if(oldId){ apiDelete(oldId).catch(e=>{}); }
+    window._editMode = false;
+    _editSource = null; _editIdx = -1; _editOldItem = null;
+    // Restaurar botão
+    const btn = document.querySelector('#lancForm .btn');
+    if(btn){ btn.textContent = '✓ Lançar RN'; btn.style.background=''; }
+  }
   D.sess.push(lanc);
   updateTotals(fra, cons, mes, val, status, +1);
   ['e-ger','e-cons','e-ind','e-fra','e-tipo','e-vrb','e-mes','e-dat','e-val'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';if(el.tagName==='SELECT')el.selectedIndex=0;}});
@@ -1865,16 +1882,34 @@ function openEditModal(source, idx){
   _editSource  = source;
   _editIdx     = idx;
   const l = source==='hist' ? HIST[idx] : D.sess[idx];
-  if(!l){ console.warn('Item não encontrado:', source, idx); return; }
-  _editOldItem = l;
-  const s = (id,v) => { const el=document.getElementById('em-'+id); if(el) el.value=v||''; };
-  s('ger',l.ger); s('cons',l.cons); s('ind',l.ind); s('fra',l.fra);
-  s('tipo',l.tipo); s('tap',l.tipoAp); s('soc',l.soc); s('vrb',l.verba);
-  s('med',l.medico); s('sts',l.status); s('mes',l.mes); s('dat',l.data);
-  s('val',l.val);
-  const modal = document.getElementById('editModal');
-  modal.style.display='flex';
-  modal.style.cssText = modal.style.cssText.replace('display: none','display: flex');
+  if(!l){ alert('Item não encontrado.'); return; }
+  _editOldItem = {...l};
+
+  const isRN = !l._tipo_origem || l._tipo_origem==='rn' ||
+    ['Almoço','Jantar','Café','Refeição de Negócios (RN)'].includes(l.tipo);
+
+  if(isRN){
+    const s = (id,v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
+    s('e-ger',l.ger); s('e-cons',l.cons); s('e-ind',l.ind);
+    s('e-fra',l.fra); s('e-tipo',l.tipo); s('e-vrb',l.verba);
+    s('e-mes',l.mes); s('e-dat',l.data); s('e-val',l.val);
+    window._editMode = true;
+    const btn = document.querySelector('#lancForm .btn');
+    if(btn){ btn.textContent='💾 Salvar Edição'; btn.style.background='#ba7517'; }
+    showPage('lanc', document.querySelector('.nb[onclick*=\'lanc\']'));
+    setTimeout(()=>{
+      const form = document.getElementById('lancForm');
+      if(form) form.scrollIntoView({behavior:'smooth',block:'start'});
+    }, 300);
+  } else {
+    const s = (id,v) => { const el=document.getElementById('em-'+id); if(el) el.value=v||''; };
+    s('ger',l.ger); s('cons',l.cons); s('ind',l.ind); s('fra',l.fra);
+    s('tipo',l.tipo); s('tap',l.tipoAp); s('soc',l.soc); s('vrb',l.verba);
+    s('sts',l.status); s('mes',l.mes); s('dat',l.data); s('val',l.val);
+    const modal = document.getElementById('editModal');
+    if(modal) modal.style.display='flex';
+    window.scrollTo(0,0);
+  }
 }
 function closeEditModal(){
   document.getElementById('editModal').style.display='none';
@@ -2355,7 +2390,6 @@ async function apiAdd(lancamento){
     tipoAp: lancamento.tipoAp ||'',
     soc:    lancamento.soc    ||'',
     verba:  lancamento.verba  ||'',
-    medico: lancamento.medico ||'',
     status: lancamento.status ||'',
     mes:    lancamento.mes    ||'',
     data:   lancamento.data   ||'',
@@ -2420,7 +2454,6 @@ async function apiEdit(id, lancamento){
     tipoAp:lancamento.tipoAp||'',
     soc:   lancamento.soc   ||'',
     verba: lancamento.verba ||'',
-    medico:lancamento.medico||'',
     status:lancamento.status||'',
     mes:   lancamento.mes   ||'',
     data:  lancamento.data  ||'',
