@@ -1735,7 +1735,7 @@ function onTipo(){
 
 // ── ATUALIZA TOTAIS FINANCEIROS ───────────────────────────────────────────────
 function updateTotals(fra, cons, mes, val, status, signal){
-  if(!fra) return;
+  if(!fra || !val) return;
   val = parseFloat(val)||0;
   if(!val) return;
   // signal = +1 para adicionar, -1 para remover
@@ -2295,7 +2295,8 @@ async function loadFromSheets(silent=false){
       });
     // Aplica totais novos
     D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); });
-    renderLanc(); buildAll();
+    try { renderLanc(); } catch(re){ console.error('renderLanc erro:', re); }
+    try { buildAll(); } catch(be){ console.error('buildAll erro:', be); }
     // Update API status indicator
     const lbl = document.getElementById('apiBtnLabel');
     const ico = document.getElementById('apiBtnIcon');
@@ -2310,7 +2311,8 @@ async function loadFromSheets(silent=false){
     const icoE = document.getElementById('apiBtnIcon');
     if(lblE){ lblE.textContent='● erro'; lblE.style.color='#c62828'; }
     if(icoE) icoE.setAttribute('stroke','#c62828');
-    if(!silent) setBanner('❌ Falha na conexão: ' + e.message,'#c62828');
+    if(!silent) setBanner('❌ Erro: ' + e.message,'#c62828');
+    console.error('loadFromSheets erro:', e);
   }
 }
 
