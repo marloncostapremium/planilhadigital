@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DupiHub — Controle de Verba Regional 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>Chart.register(ChartDataLabels); Chart.defaults.set("plugins.datalabels", {display: false});</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -16,7 +18,7 @@ body{background:var(--bg);color:var(--wh);font-family:Arial,sans-serif;min-heigh
 .hbtns{display:flex;align-items:center;gap:.5rem}
 .hbtns span{font-size:.7rem;color:var(--mu)}
 .xb{background:var(--sf2);border:1px solid var(--bd);color:var(--mu);font-size:.71rem;padding:.3rem .65rem;border-radius:5px;cursor:pointer;transition:all .2s}.xb:hover{color:var(--wh);border-color:var(--ac)}
-.nav{display:flex;gap:.3rem;padding:.65rem 1.5rem 0;border-bottom:1px solid var(--bd);background:var(--bg);overflow-x:auto;position:sticky;top:58px;z-index:99}
+.nav{display:flex;gap:.3rem;padding:.65rem 1.5rem 0;border-bottom:1px solid var(--bd);background:var(--sf);overflow-x:auto;position:sticky;top:58px;z-index:99}
 .nb{background:none;border:none;color:var(--mu);font-size:.82rem;padding:.48rem .9rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;border-radius:4px 4px 0 0;white-space:nowrap}
 .vnb{background:none;border:none;color:var(--mu);font-size:.78rem;padding:.38rem .8rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;border-radius:4px 4px 0 0;white-space:nowrap}
 .vnb.on{color:var(--ac);border-bottom-color:var(--ac);background:var(--sf2)}
@@ -66,11 +68,6 @@ footer{background:var(--sf);border-top:1px solid var(--bd);text-align:center;pad
 footer strong{color:var(--ac)}
 @media(max-width:860px){.g2,.g3{grid-template-columns:1fr}.gg{grid-template-columns:1fr 1fr}.pg{padding:.9rem}}
 @media print{.hdr,.nav,.btn,.eb{display:none!important}.pg{display:block!important;padding:0}body{background:white;color:black}}
-
-
-
-
-
 </style>
 </head>
 <body>
@@ -113,16 +110,7 @@ footer strong{color:var(--ac)}
         <button onclick="showPage('wbs',this);toggleExportMenu()" style="width:100%;background:none;border:none;color:var(--ac);padding:.6rem 1rem;text-align:left;cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:.6rem;border-top:1px solid var(--bd)">
           <span style="font-size:.9rem">📊</span> CC &amp; WBS
         </button>
-        <div style="padding:.3rem .8rem;font-size:.65rem;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-top:1px solid var(--bd);margin-top:.2rem">Exportar WBS</div>
-        <button onclick="exportWbsExcel();toggleExportMenu()" style="width:100%;background:none;border:none;color:var(--wh);padding:.45rem 1rem;text-align:left;cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:.6rem">
-          <span style="color:#16a34a;font-size:.9rem">⬇</span> WBS — Excel
-        </button>
-        <button onclick="exportWbsPDF();toggleExportMenu()" style="width:100%;background:none;border:none;color:var(--wh);padding:.45rem 1rem;text-align:left;cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:.6rem">
-          <span style="color:#dc2626;font-size:.9rem">⬇</span> WBS — PDF
-        </button>
-        <button onclick="exportWbsWord();toggleExportMenu()" style="width:100%;background:none;border:none;color:var(--wh);padding:.45rem 1rem;text-align:left;cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:.6rem">
-          <span style="color:#0891b2;font-size:.9rem">⬇</span> WBS — Word
-        </button>
+
       </div>
     </div>
   </div>
@@ -139,7 +127,7 @@ footer strong{color:var(--ac)}
       onkeydown="if(event.key==='Enter') checkGlobalPassword()">
     <div id="globalPwError" style="font-size:.73rem;color:#c62828;margin-bottom:.6rem;display:none">&#10005; Senha incorreta. Tente novamente.</div>
     <button class="btn" onclick="checkGlobalPassword()" style="width:100%;padding:.55rem;font-size:.88rem">&#128275; Acessar</button>
-    <div style="font-size:.62rem;color:var(--mu);margin-top:.9rem">Sanofi Dupixent 2026</div>
+    <div style="font-size:.62rem;color:var(--mu);margin-top:.9rem">Dupixent 2026</div>
   </div>
 </div>
 
@@ -153,7 +141,7 @@ footer strong{color:var(--ac)}
 
 <!-- DASHBOARD -->
 <div id="pg-dash" class="pg on">
-<div class="app-blur"><div class="kgrid" style="margin-top:1rem">
+  <div class="app-blur"><div class="kgrid" style="margin-top:1rem">
     <div class="kpi"><div class="kl">Orçamento Total</div><div class="kv" style="color:var(--wh)" id="k-orc">—</div><div class="ks">4 franquias</div></div>
     <div class="kpi"><div class="kl">Total Pago</div><div class="kv" style="color:var(--ac)" id="k-pago">—</div><div class="ks" id="k-pago-p">—</div></div>
     <div class="kpi"><div class="kl">Total Planejado</div><div class="kv" style="color:var(--am)" id="k-plan">—</div><div class="ks" id="k-plan-p">—</div></div>
@@ -203,7 +191,7 @@ footer strong{color:var(--ac)}
 
 <!-- GRÁFICOS -->
 <div id="pg-graf" class="pg">
-<div class="app-blur">
+  <div class="app-blur">
   <div class="stit" style="margin-top:1rem">Distribuição por Franquia</div>
   <div class="g2">
     <div class="cc"><div class="ct">Pago × Planejado por Franquia</div><div style="height:215px"><canvas id="cBarH"></canvas></div></div>
@@ -217,7 +205,7 @@ footer strong{color:var(--ac)}
 
 <!-- CONSULTORES -->
 <div id="pg-cons" class="pg">
-<div class="app-blur">
+  <div class="app-blur">
   <div class="stit" style="margin-top:1rem">Resumo por Consultor</div>
 
   <!-- Gráfico 1: Pago x Planejado por Consultor -->
@@ -229,7 +217,7 @@ footer strong{color:var(--ac)}
   <!-- Gráfico 2: Dispersão 3D - Investimento por Consultor -->
   <div class="stit">Tipos de Investimento por Franquia</div>
   <div class="cc" style="margin-bottom:1rem">
-    <div class="ct">Painel de resumo — total por franquia com barra de progresso + ranking de consultores</div>
+    <div class="ct">Painel de resumo — total por franquia com barra de progresso + painel consultores</div>
     <div id="cPainel" style="margin-top:.8rem"></div>
   </div>
 
@@ -256,7 +244,7 @@ footer strong{color:var(--ac)}
 
 <!-- LANÇAR VERBA -->
 <div id="pg-lanc" class="pg">
-<div class="stit" style="margin-top:1rem">&#128274; Budget por Franquia <span style="font-weight:400;font-size:.65rem;color:var(--mu);text-transform:none;letter-spacing:0" id="lockStatus">— bloqueado</span></div>
+  <div class="stit" style="margin-top:1rem">&#128274; Budget por Franquia <span style="font-weight:400;font-size:.65rem;color:var(--mu);text-transform:none;letter-spacing:0" id="lockStatus">— bloqueado</span></div>
   <div class="ef" id="orcForm"></div>
 
   <div id="storeBanner" style="font-size:.72rem;color:#1d9e75;background:#1d9e7515;border:1px solid #1d9e7533;border-radius:6px;padding:.45rem .8rem;margin-bottom:.6rem;display:block"></div>
@@ -269,22 +257,23 @@ footer strong{color:var(--ac)}
     <div><label>Gerente Regional <span style="color:#c62828">*</span></label>
       <select id="e-ger"><option value="">Selecione...</option><option>Marlon Costa</option></select></div>
     <div><label>Consultor (CSA) <span style="color:#c62828">*</span></label>
-      <select id="e-cons"><option value="">Selecione...</option>
-        <option>Regional</option>
-        <option>Angelica Silva</option>
-        <option>Cassandra Andrade</option>
-        <option>Elaine Azevedo</option>
-        <option>Fabiano Cortez</option>
-        <option>Francisco Neto</option>
-        <option>Joanna Macedo</option>
-        <option>Mariana Costa</option>
-        <option>Silvia Cunha</option>
-        <option>Fernando Maia</option>
-        <option>Marco Rocha</option>
-        <option>Rafaela Correa</option>
-        <option>Saulo Guedes</option>
-        <option>Thiago Martins</option>
-      </select></div>
+      <select id="e-cons">
+      <option value="">Selecione...</option>
+      <option>Regional</option>
+      <option>Angélica Silva</option>
+      <option>Elaíne Azevedo</option>
+      <option>Silvia Cunha</option>
+      <option>Mariana Costa</option>
+      <option>Fabiano Cortez</option>
+      <option>Francisco Neto</option>
+      <option>Cassandra Andrade</option>
+      <option>Joanna Macedo</option>
+      <option>Rafaela Correa</option>
+      <option>Fernando Maia</option>
+      <option>Thiago Martins</option>
+      <option>Marco Rocha</option>
+      <option>Saulo Guedes</option>
+    </select></div>
     <div><label>Indicação <span style="color:#c62828">*</span></label>
       <select id="e-ind" onchange="autoFranquia()" ><option value="">Selecione...</option>
         <optgroup label="🌬️ Resp — Respiratório">
@@ -308,8 +297,6 @@ footer strong{color:var(--ac)}
         <option>Verba Marketing Congresso</option>
         <option>Verba Cross</option>
       </select></div>
-    <div><label>Médico Engajado <span style="color:#c62828">*</span></label>
-      <input type="text" id="e-med" placeholder="Nome do médico"></div>
     <div><label>Mês <span style="color:#c62828">*</span></label>
       <select id="e-mes" onchange="autoDate('e-dat','e-mes')"><option value="">Selecione...</option>
         <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
@@ -331,21 +318,36 @@ footer strong{color:var(--ac)}
   <div class="ef">
     <div><label>Gerente Regional <span style="color:#c62828">*</span></label>
       <select id="ev-ger"><option value="">Selecione...</option>
-        <option>Marlon Costa</option><option>Carla Moraes</option><option>Jefferson Souza</option>
-        <option>José Júnior</option><option>Emerson Silva</option><option>Alexandre Poças</option>
+        <option>Marlon Costa</option>
       </select></div>
     <div><label>Consultor (CSA) <span style="color:#c62828">*</span></label>
-      <select id="ev-cons"><option value="">Selecione...</option>
-        <option>Regional</option>
-        <option>Angélica Silva</option><option>Elaíne Azevedo</option><option>Tassia Novais</option>
-        <option>Silvia Cunha</option><option>Greice Morais</option><option>Caroline Pereira</option>
-        <option>Vagner Elias</option><option>Eduardo Reis</option><option>Eduardo de Deus</option>
-        <option>Rafaela Correa</option><option>Dayane Olivieri</option>
-      </select></div>
+      <select id="ev-cons">
+      <option value="">Selecione...</option>
+      <option>Regional</option>
+      <option>Angélica Silva</option>
+      <option>Elaíne Azevedo</option>
+      <option>Silvia Cunha</option>
+      <option>Mariana Costa</option>
+      <option>Fabiano Cortez</option>
+      <option>Francisco Neto</option>
+      <option>Cassandra Andrade</option>
+      <option>Joanna Macedo</option>
+      <option>Rafaela Correa</option>
+      <option>Fernando Maia</option>
+      <option>Thiago Martins</option>
+      <option>Marco Rocha</option>
+      <option>Saulo Guedes</option>
+    </select></div>
     <div><label>Indicação <span style="color:#c62828">*</span></label>
       <select id="ev-ind" onchange="autoFraEv()"><option value="">Selecione...</option>
-        <option>Asma</option><option>DPOC</option><option>DA</option>
-        <option>PN</option><option>UCE</option><option>EoE</option><option>NP</option>
+        <optgroup label="🫁 Resp — Respiratório">
+          <option>Asma</option>
+          <option>DPOC</option>
+        </optgroup>
+        <optgroup label="👃 Rino — Rinossinusite">
+          <option>RSCcPN</option>
+          <option>RFSA</option>
+        </optgroup>
       </select></div>
     <div><label>Franquia <span style="color:#1d9e75;font-size:.68rem">(auto)</span></label>
       <select id="ev-fra"><option value="">— automático —</option>
@@ -369,11 +371,40 @@ footer strong{color:var(--ac)}
         <option>Aula Mensal Sociedade</option><option>Outros</option>
       </select></div>
     <div><label>Sociedade</label>
-      <select id="ev-soc"><option value="">Selecione...</option>
-        <option>ABORL-RJ</option><option>ABORL-ES</option><option>ASBAI-RJ</option><option>ASBAI-ES</option>
-        <option>SOPTERJ</option><option>SPES</option><option>SBD-RJ</option><option>SBD-ES</option>
-        <option>GASTRO-RJ</option><option>GASTRO-ES</option><option>SBP-RJ</option><option>SBP-ES</option>
-        <option>OUTRAS</option>
+      <select id="ev-soc">
+        <option value="">Selecione...</option>
+        <option>SMPCT-MG</option>
+        <option>SMPCT-ES</option>
+        <option>SPES-ES</option>
+        <option>SPBA-BA</option>
+        <option>SBPT-PE</option>
+        <option>SBPT-AL</option>
+        <option>SBPT-CE</option>
+        <option>SBPT-PI</option>
+        <option>SBPT-PB</option>
+        <option>SBPT-RN</option>
+        <option>SBPT-OUTROS</option>
+        <option>ASBAI-MG</option>
+        <option>ASBAI-ES</option>
+        <option>ASBAI-BA</option>
+        <option>ASBAI-PE</option>
+        <option>ASBAI-AL</option>
+        <option>ASBAI-CE</option>
+        <option>ASBAI-PI</option>
+        <option>ASBAI-PB</option>
+        <option>ASBAI-RN</option>
+        <option>ASBAI-OUTROS</option>
+        <option>ABORL-MG</option>
+        <option>ABORL-ES</option>
+        <option>ABORL-BA</option>
+        <option>ABORL-PE</option>
+        <option>ABORL-AL</option>
+        <option>ABORL-CE</option>
+        <option>ABORL-PI</option>
+        <option>ABORL-PB</option>
+        <option>ABORL-RN</option>
+        <option>ABORL-OUTROS</option>
+        <option>Outras sociedades</option>
       </select></div>
     <div><label>Nome do Prestador</label>
       <input type="text" id="ev-prest" placeholder="Nome do prestador" disabled style="opacity:.35;cursor:not-allowed"></div>
@@ -397,8 +428,6 @@ footer strong{color:var(--ac)}
         <option>Verba Marketing Congresso</option>
         <option>Verba Cross</option>
       </select></div>
-    <div><label>Médico Engajado</label>
-      <input type="text" id="ev-med" placeholder="Nome do médico"></div>
     <div><label>Mês <span style="color:#c62828">*</span></label>
       <select id="ev-mes" onchange="autoDate('ev-dat','ev-mes')"><option value="">Selecione...</option>
         <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
@@ -428,11 +457,19 @@ footer strong{color:var(--ac)}
       style="background:var(--sf2);border:1px solid var(--bd);color:var(--wh);border-radius:6px;padding:.28rem .5rem;font-size:.75rem;min-width:140px">
       <option value="">👤 Consultor</option>
       <option>Regional</option>
-      <option>Angelica Silva</option><option>Cassandra Andrade</option><option>Elaine Azevedo</option>
-      <option>Fabiano Cortez</option><option>Francisco Neto</option><option>Joanna Macedo</option>
-      <option>Mariana Costa</option><option>Silvia Cunha</option>
-      <option>Fernando Maia</option><option>Marco Rocha</option><option>Rafaela Correa</option>
-      <option>Saulo Guedes</option><option>Thiago Martins</option>
+      <option>Angélica Silva</option>
+      <option>Elaíne Azevedo</option>
+      <option>Silvia Cunha</option>
+      <option>Mariana Costa</option>
+      <option>Fabiano Cortez</option>
+      <option>Francisco Neto</option>
+      <option>Cassandra Andrade</option>
+      <option>Joanna Macedo</option>
+      <option>Rafaela Correa</option>
+      <option>Fernando Maia</option>
+      <option>Thiago Martins</option>
+      <option>Marco Rocha</option>
+      <option>Saulo Guedes</option>
     </select>
 
     <select id="filtroTipo" onchange="renderLanc()" title="Filtrar por Tipo"
@@ -486,7 +523,7 @@ footer strong{color:var(--ac)}
       <thead><tr>
         <th>Consultor</th><th>Indicação</th><th>Franquia</th>
         <th>Tipo</th><th>Prestador/Soc</th>
-        <th>Médico</th><th>Status</th><th>Mês</th>
+        <th>Status</th><th>Mês</th>
         <th class="nr">Valor (R$)</th><th>Ações</th>
       </tr></thead>
       <tbody id="tLancBody"></tbody>
@@ -579,27 +616,29 @@ footer strong{color:var(--ac)}
 
 <!-- AGENDA DE VIAGENS -->
 <div id="pg-viag" class="pg">
-<!-- BLOCO 1: FORMULÁRIO -->
+
+  <!-- BLOCO 1: FORMULÁRIO -->
   <div class="stit" style="margin-top:1rem">Lançar Viagem</div>
   <div class="ef">
 
     <div><label>Consultor <span style="color:#c62828">*</span></label>
-      <select id="vg-cons"><option value="">Selecione...</option>
-        <option>Regional</option>
-        <option>Angelica Silva</option>
-        <option>Cassandra Andrade</option>
-        <option>Elaine Azevedo</option>
-        <option>Fabiano Cortez</option>
-        <option>Francisco Neto</option>
-        <option>Joanna Macedo</option>
-        <option>Mariana Costa</option>
-        <option>Silvia Cunha</option>
-        <option>Fernando Maia</option>
-        <option>Marco Rocha</option>
-        <option>Rafaela Correa</option>
-        <option>Saulo Guedes</option>
-        <option>Thiago Martins</option>
-      </select>
+      <select id="vg-cons">
+      <option value="">Selecione...</option>
+      <option>Regional</option>
+      <option>Angélica Silva</option>
+      <option>Elaíne Azevedo</option>
+      <option>Silvia Cunha</option>
+      <option>Mariana Costa</option>
+      <option>Fabiano Cortez</option>
+      <option>Francisco Neto</option>
+      <option>Cassandra Andrade</option>
+      <option>Joanna Macedo</option>
+      <option>Rafaela Correa</option>
+      <option>Fernando Maia</option>
+      <option>Thiago Martins</option>
+      <option>Marco Rocha</option>
+      <option>Saulo Guedes</option>
+    </select>
     </div>
 
     <div><label>Gerente Regional <span style="color:#c62828">*</span></label>
@@ -629,7 +668,6 @@ footer strong{color:var(--ac)}
           <option value="BA">BA — Bahia</option>
           <option value="PE">PE — Pernambuco</option>
           <option value="CE">CE — Ceará</option>
-          <option value="MA">MA — Maranhão</option>
           <option value="PI">PI — Piauí</option>
           <option value="RN">RN — Rio Grande do Norte</option>
           <option value="PB">PB — Paraíba</option>
@@ -743,20 +781,19 @@ footer strong{color:var(--ac)}
 
 <script>
 // ── DADOS FIXOS (histórico da planilha — não alteram totais financeiros) ──────
-const HIST = [{"ger":"Marlon","cons":"Angélica Silva","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Andrea faro","status":"Pago","mes":"Janeiro","data":"2026-01-30","val":127.94},{"ger":"Marlon","cons":"Angélica Silva","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Rodolfo","status":"Pago","mes":"Fevereiro","data":"2026-02-05","val":173.34},{"ger":"Marlon","cons":"Angélica Silva","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Camila","status":"Pago","mes":"Fevereiro","data":"2026-02-03","val":71.4},{"ger":"Marlon","cons":"Angélica Silva","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Camila","status":"Pago","mes":"Fevereiro","data":"2026-02-10","val":521.73},{"ger":"Marlon","cons":"Angélica Silva","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Francisco","status":"Pago","mes":"Fevereiro","data":"2026-02-10","val":163.35},{"ger":"Marlon","cons":"Angélica Silva","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Felipe Gonzales","status":"Pago","mes":"Fevereiro","data":"2026-02-11","val":477.69},{"ger":"Marlon","cons":"Angélica Silva","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Nadja","status":"Pago","mes":"Março","data":"2026-03-04","val":555.52},{"ger":"Marlon","cons":"Angélica Silva","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Jose Leonardo Sardenberg","status":"Pago","mes":"Março","data":"2026-03-06","val":268.4},{"ger":"Marlon","cons":"Angélica Silva","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Andrea faro","status":"Pago","mes":"Março","data":"2026-03-12","val":146.25},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Sabrina e Lívia","status":"Pago","mes":"Fevereiro","data":"2026-02-03","val":514.8},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Karina e Andréia","status":"Pago","mes":"Fevereiro","data":"2026-02-03","val":602.14},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Juliana Salim","status":"Pago","mes":"Fevereiro","data":"2026-02-05","val":499.48},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Amanda Velten e Jessica","status":"Pago","mes":"Fevereiro","data":"2026-02-05","val":587.0},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Brun Provenzano","status":"Pago","mes":"Fevereiro","data":"2026-02-09","val":60.28},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Thatiana Abelha","status":"Pago","mes":"Fevereiro","data":"2026-02-10","val":412.16},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Thatiana Abelha","status":"Pago","mes":"Março","data":"2026-03-05","val":380.16},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"José Elabras","status":"Pago","mes":"Março","data":"2026-03-06","val":432.1},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Márcia André","status":"Pago","mes":"Março","data":"2026-03-10","val":97.57},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Ivana e M. Eduarda","status":"Pago","mes":"Março","data":"2026-03-11","val":546.57},{"ger":"MARLON COSTA","cons":"Elaíne Azevedo","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"","medico":"Márcia Carreira","status":"Pago","mes":"Março","data":"2026-03-12","val":459.2},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Flávio José","status":"Pago","mes":"Fevereiro","data":"2025-02-02","val":438.56},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Gilmar Zonzin","status":"Pago","mes":"Fevereiro","data":"2025-02-04","val":722.7},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Fabiane Barreto","status":"Pago","mes":"Fevereiro","data":"2026-02-06","val":383.04},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Beatriz chaves","status":"Pago","mes":"Fevereiro","data":"2026-02-13","val":769.22},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Mariana Rust","status":"Pago","mes":"Março","data":"2026-03-02","val":848.96},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Grazzia Venâncio","status":"Pago","mes":"Março","data":"2026-03-04","val":731.36},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Rafael Galvão","status":"Pago","mes":"Março","data":"2026-03-05","val":732.48},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Michele Viegas","status":"Pago","mes":"Março","data":"2026-03-06","val":551.04},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Natália Barboza","status":"Pago","mes":"Março","data":"2026-03-09","val":550.2},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Renato Azambuja","status":"Pago","mes":"Março","data":"2026-03-10","val":744.1},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Fernanda Sholl","status":"Pago","mes":"Março","data":"2026-03-11","val":618.8},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Thamyris","status":"Pago","mes":"Março","data":"2026-03-12","val":665.28},{"ger":"Marlon Costa","cons":"Tassia Novais","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Renato Calil","status":"Pago","mes":"Março","data":"2026-03-16","val":421.12},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Guilherme Spinelli*","status":"Pago","mes":"Janeiro","data":"","val":762.72},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Mariana Farias*","status":"Pago","mes":"Fevereiro","data":"","val":501.76},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Sérgio Dortas*","status":"Pago","mes":"Fevereiro","data":"2026-02-12","val":569.4},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Rita de Cássia","status":"Pago","mes":"Fevereiro","data":"2026-02-10","val":289.3},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Patricia Barreto","status":"Pago","mes":"Fevereiro","data":"2026-03-02","val":293.44},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Fernando Azevedo","status":"Pago","mes":"Março","data":"2026-03-05","val":499.52},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Bruno Messias & Maria Margarida* - Rede Américas","status":"Pago","mes":"Março","data":"2026-03-06","val":1181.6},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Rita de Cássia","status":"Pago","mes":"Março","data":"2026-03-10","val":537.9},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"DPOC","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Patricia Meirelles","status":"Pago","mes":"Março","data":"2026-03-11","val":753.5},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Rossy Bastos*","status":"Pago","mes":"Março","data":"2026-03-17","val":512.6},{"ger":"Marlon Costa","cons":"Silvia Cunha","ind":"Asma","fra":"Resp","tipo":"Refeição de Negócios (RN)","tipoAp":"","soc":"","verba":"Verba Regional","medico":"Alessandra Nunes","status":"Pago","mes":"Março","data":"2026-03-18","val":297.76}];
+const HIST = [{"id": "L1774266143748", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Leandro Baptista e Jaqueline Lunz", "status": "Pago", "mes": "Março", "data": "2026-03-16", "val": 485.76}, {"id": "L1774266253455", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Sabrina, Lívia , Fabricio", "status": "Pago", "mes": "Março", "data": "2026-03-24", "val": 1042.9}, {"id": "L1774266359311", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Beatriz de Oliveira", "status": "Pago", "mes": "Março", "data": "2026-03-18", "val": 553.18}, {"id": "L1774266512936", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Luiza Tatagiba, Jéssica Zandomenico e Amanda Velten", "status": "Pago", "mes": "Março", "data": "2026-03-18", "val": 834.9}, {"id": "L1774266573286", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Karina Tavares", "status": "Pago", "mes": "Março", "data": "2026-03-20", "val": 89.9}, {"id": "L1774268540673", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Guilherme Laporti e Margarida Aires", "status": "Pago", "mes": "Março", "data": "2026-03-17", "val": 345.0}, {"id": "L1774268655328", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Christiane Saliba", "status": "Pago", "mes": "Março", "data": "2026-03-19", "val": 467.48}, {"id": "L1774269906314", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Vanessa Francesquini", "status": "Pago", "mes": "Março", "data": "2026-03-20", "val": 499.36}, {"id": "L1774270423599", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rafael Galvão", "status": "Pago", "mes": "Março", "data": "2026-03-17", "val": 466.84}, {"id": "L1774370012183", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "DPOC", "fra": "Resp", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Tânia Conde", "status": "Pago", "mes": "Março", "data": "2026-03-20", "val": 297.02}, {"id": "L1774871245522", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Christiane Anias", "status": "Pago", "mes": "Março", "data": "2026-03-23", "val": 1165.92}, {"id": "L1774878409713", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Maria sonia Coelho Orsolon", "status": "Pago", "mes": "Março", "data": "2026-03-18", "val": 286.29}, {"id": "L1774878493716", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Juliana Rodrigues Garcia", "status": "Pago", "mes": "Março", "data": "2026-03-24", "val": 590.24}, {"id": "L1774878578096", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Matias Dorregaray", "status": "Pago", "mes": "Março", "data": "2026-03-25", "val": 689.76}, {"id": "L1774878638222", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Wesley Tomaz Ferreira", "status": "Pago", "mes": "Março", "data": "2026-03-25", "val": 409.0}, {"id": "L1774880863039", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Maria Lúcia Barcellos", "status": "Pago", "mes": "Março", "data": "2026-03-24", "val": 169.12}, {"id": "L1774880932535", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Neide Maria  Pereira", "status": "Pago", "mes": "Março", "data": "2026-03-27", "val": 91.85}, {"id": "L1774893777143", "ger": "Marlon Costa", "cons": "Regional", "ind": "Asma", "fra": "Resp", "tipo": "Apoio Sociedade", "tipoAp": "Jornada Regional", "soc": "SPES", "verba": "Verba Regional", "medico": "", "status": "Planejado", "mes": "Maio", "data": "2026-05-01", "val": 15000.0}, {"id": "L1774985880428", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "", "status": "Pago", "mes": "Março", "data": "2026-03-25", "val": 15665.75}, {"id": "L1774986506570", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Juliana Leocardio", "status": "Pago", "mes": "Março", "data": "2026-03-25", "val": 371.84}, {"id": "L1774988296634", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Grazzia Venâncio", "status": "Pago", "mes": "Março", "data": "2026-03-31", "val": 708.4}, {"id": "L1775132223374", "ger": "Marlon Costa", "cons": "Regional", "ind": "Asma", "fra": "Resp", "tipo": "Apoio Sociedade", "tipoAp": "Jornada Itinerante", "soc": "SBP-RJ", "verba": "Verba Regional", "medico": "Rossy Bastos", "status": "Planejado", "mes": "Maio", "data": "2026-05-23", "val": 4000.0}, {"id": "L1775146065912", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "DPOC", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "", "status": "Pago", "mes": "Março", "data": "2026-03-31", "val": 8207.02}, {"id": "L1775482174476", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Alexandra Castro", "status": "Pago", "mes": "Março", "data": "2026-03-31", "val": 486.08}, {"id": "L1775482292492", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Susan Tabasnik", "status": "Pago", "mes": "Abril", "data": "2026-04-01", "val": 1393.29}, {"id": "L1775482349394", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Tiago Binoti", "status": "Pago", "mes": "Março", "data": "2026-03-30", "val": 268.5}, {"id": "L1775482425126", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Andrea Faro", "status": "Pago", "mes": "Abril", "data": "2026-04-02", "val": 473.76}, {"id": "L1775482476870", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Larissa Conceição", "status": "Pago", "mes": "Abril", "data": "2026-04-02", "val": 258.06}, {"id": "L1775493358274", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Brunna Santanna", "status": "Pago", "mes": "Abril", "data": "2026-04-02", "val": 377.44}, {"id": "L1775494026780", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "", "status": "Pago", "mes": "Abril", "data": "2026-04-01", "val": 11577.8}, {"id": "L1775834675360", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Luiz Carlos Bandoli", "status": "Pago", "mes": "Abril", "data": "2026-04-09", "val": 677.0}, {"id": "L1776221223337", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Thatiana Abelha", "status": "Pago", "mes": "Abril", "data": "2026-04-07", "val": 393.91}, {"id": "L1776221275386", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Luciana da Mata", "status": "Pago", "mes": "Abril", "data": "2026-04-10", "val": 693.77}, {"id": "L1776269992159", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Guilherme Ramos e Isabela Martins", "status": "Pago", "mes": "Abril", "data": "2026-04-10", "val": 1377.6}, {"id": "L1776270397524", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Anna Carolina Arraes", "status": "Pago", "mes": "Abril", "data": "2026-04-14", "val": 659.92}, {"id": "L1776425566561", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Cleusa Genn § Marcia Mattos", "status": "Pago", "mes": "Abril", "data": "2026-04-17", "val": 719.0}, {"id": "L1776425852585", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rita de Cassia", "status": "Pago", "mes": "Abril", "data": "2026-04-03", "val": 445.94}, {"id": "L1776431243792", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Refeição de Negócios (RN)", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Cecilia Pache", "status": "Pago", "mes": "Abril", "data": "2026-04-15", "val": 643.0}, {"id": "L1776432114397", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "SUSAN TABASNIK", "status": "Pago", "mes": "Abril", "data": "2026-04-16", "val": 10440.0}, {"id": "L1776437594709", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Fabiana abbud", "status": "Pago", "mes": "Abril", "data": "2026-04-01", "val": 360.64}, {"id": "L1776437638111", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Julio Ferenzini", "status": "Pago", "mes": "Abril", "data": "2026-04-06", "val": 159.5}, {"id": "L1776437672527", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Gilmar zonzin", "status": "Pago", "mes": "Abril", "data": "2026-04-07", "val": 782.07}, {"id": "L1776437713757", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Solange Teixeira", "status": "Pago", "mes": "Abril", "data": "2026-04-08", "val": 617.74}, {"id": "L1776437748503", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Bernardo Novoa", "status": "Pago", "mes": "Abril", "data": "2026-04-15", "val": 571.54}, {"id": "L1776437820305", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rafael Galvão / Ludmila", "status": "Pago", "mes": "Abril", "data": "2026-04-16", "val": 823.56}, {"id": "L1776456684350", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Jaqueline Lunz e Mariana", "status": "Pago", "mes": "Abril", "data": "2026-04-16", "val": 655.4}, {"id": "L1776456724282", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Jessica Zandomenico", "status": "Pago", "mes": "Abril", "data": "2026-04-15", "val": 262.9}, {"id": "L1776865541058", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "", "status": "Pago", "mes": "Abril", "data": "2026-04-14", "val": 19562.0}, {"id": "L1777155185303", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Teste", "status": "Pago", "mes": "Abril", "data": "2026-04-16", "val": 100.0}, {"id": "L1777985922576", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Luiza Tatagiba", "status": "Pago", "mes": "Abril", "data": "2026-04-27", "val": 250.8}, {"id": "L1777986009994", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Leandro Baptista", "status": "Pago", "mes": "Abril", "data": "2026-04-28", "val": 446.16}, {"id": "L1777986090470", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Sabrina  Cavalcanti e Lívia", "status": "Pago", "mes": "Abril", "data": "2026-04-30", "val": 354.2}, {"id": "L1777986167354", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Fabrício Prado", "status": "Pago", "mes": "Abril", "data": "2026-04-30", "val": 332.47}, {"id": "L1777986566680", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Priscila Geller", "status": "Pago", "mes": "Abril", "data": "2026-04-24", "val": 1591.04}, {"id": "L1778068607698", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Sérgio Dortas, Mônica Flores, Roberta Gonçalves", "status": "Pago", "mes": "Abril", "data": "2026-04-28", "val": 1337.6}, {"id": "L1778539707239", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Mariana Farias", "status": "Pago", "mes": "Maio", "data": "2026-05-11", "val": 389.85}, {"id": "L1778755932611", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Arthur Vianna", "status": "Pago", "mes": "Maio", "data": "2026-05-13", "val": 299.18}, {"id": "L1779118656388", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Karla Delevedove", "status": "Pago", "mes": "Abril", "data": "2026-04-27", "val": 437.25}, {"id": "L1779118699136", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Albert Bitran", "status": "Pago", "mes": "Abril", "data": "2026-04-27", "val": 100.65}, {"id": "L1779118741844", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Aline Camporez", "status": "Pago", "mes": "Abril", "data": "2026-04-27", "val": 629.12}, {"id": "L1779118908250", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Christiane Saliba", "status": "Pago", "mes": "Abril", "data": "2026-04-29", "val": 451.0}, {"id": "L1779118939832", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Andreia Perazzio", "status": "Pago", "mes": "Abril", "data": "2026-04-01", "val": 440.0}, {"id": "L1779119040505", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rinaldo Melo", "status": "Pago", "mes": "Maio", "data": "2026-05-04", "val": 852.32}, {"id": "L1779119099023", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Danielle Hosken", "status": "Pago", "mes": "Maio", "data": "2026-05-06", "val": 726.59}, {"id": "L1779119197353", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Ednilson Cesar", "status": "Pago", "mes": "Maio", "data": "2026-05-13", "val": 933.38}, {"id": "L1779119415107", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Pedro Viana", "status": "Pago", "mes": "Maio", "data": "2026-05-14", "val": 11881.13}, {"id": "L1779142924704", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Azambuja + Vanessa", "status": "Pago", "mes": "Abril", "data": "2026-04-24", "val": 972.9}, {"id": "L1779143023690", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Belize Marques", "status": "Pago", "mes": "Abril", "data": "2026-04-27", "val": 442.4}, {"id": "L1779143128169", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "José Gustavo+ Vinícius", "status": "Pago", "mes": "Abril", "data": "2026-04-29", "val": 1260.67}, {"id": "L1779143193862", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Fernanda sholl", "status": "Pago", "mes": "Maio", "data": "2026-05-05", "val": 227.92}, {"id": "L1779143635938", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Bruna Sossai", "status": "Pago", "mes": "Maio", "data": "2026-05-18", "val": 285.6}, {"id": "L1779145772299", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Bárbara Delazari", "status": "Pago", "mes": "Maio", "data": "2026-05-11", "val": 334.32}, {"id": "L1779267740713", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rita de Cássia", "status": "Pago", "mes": "Maio", "data": "2026-05-19", "val": 77.0}, {"id": "L1779375299581", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Patricia Meireles", "status": "Pago", "mes": "Maio", "data": "2026-05-20", "val": 125.84}, {"id": "L1779722415977", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Wesley Thomaz", "status": "Pago", "mes": "Maio", "data": "2026-05-19", "val": 696.5}, {"id": "L1779722840692", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Isabela Aziz", "status": "Pago", "mes": "Maio", "data": "2026-05-11", "val": 359.52}, {"id": "L1779735194384", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Fabiana Cerqueira", "status": "Pago", "mes": "Maio", "data": "2026-05-19", "val": 107.52}, {"id": "L1779735255921", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rafael Galvão + Marlon", "status": "Pago", "mes": "Maio", "data": "2026-05-21", "val": 904.18}, {"id": "L1779735357263", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Livia Fernandes", "status": "Pago", "mes": "Maio", "data": "2026-05-12", "val": 498.96}, {"id": "L1779735508362", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Flavia Perroni", "status": "Pago", "mes": "Maio", "data": "2026-05-04", "val": 155.29}, {"id": "L1779735592592", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Camila Ventura", "status": "Pago", "mes": "Maio", "data": "2026-05-13", "val": 50.47}, {"id": "L1779736784575", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Coffee Break", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Thiago Bartholo", "status": "Pago", "mes": "Maio", "data": "2026-05-05", "val": 1200.0}, {"id": "L1779737408546", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Alexandra carvalho", "status": "Pago", "mes": "Abril", "data": "2026-04-22", "val": 333.3}, {"id": "L1779737699727", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Flavia Perroni", "status": "Pago", "mes": "Abril", "data": "2026-04-16", "val": 164.41}, {"id": "L1779764285079", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Fabrício Prado Monteiro e Rossane", "status": "Pago", "mes": "Maio", "data": "2026-05-20", "val": 286.5}, {"id": "L1779764372291", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Livia e Sabrina", "status": "Pago", "mes": "Maio", "data": "2026-05-21", "val": 261.8}, {"id": "L1779764454726", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Karina Tavares", "status": "Pago", "mes": "Maio", "data": "2026-05-01", "val": 546.7}, {"id": "L1779822346487", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Leandro Baptista", "status": "Pago", "mes": "Maio", "data": "2026-05-19", "val": 8424.2}, {"id": "L1779822605201", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "", "status": "Planejado", "mes": "Junho", "data": "2026-06-01", "val": 5600.0}, {"id": "L1779823521829", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Roberta Chagas", "status": "Planejado", "mes": "Agosto", "data": "2026-08-06", "val": 6000.0}, {"id": "L1779823564984", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Roberta Chagas", "status": "Planejado", "mes": "Julho", "data": "2026-07-02", "val": 6000.0}, {"id": "L1779823659933", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "DPOC", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Guilherme Spinelli", "status": "Planejado", "mes": "Agosto", "data": "2026-08-01", "val": 6000.0}, {"id": "L1779823674239", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "DPOC", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Guilherme Spinelli", "status": "Planejado", "mes": "Setembro", "data": "2026-09-01", "val": 6000.0}, {"id": "L1779895436984", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Danielle Hosken", "status": "Pago", "mes": "Abril", "data": "2026-04-28", "val": 10092.86}, {"id": "L1780093029634", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rafael Galvão", "status": "Pago", "mes": "Maio", "data": "2026-05-28", "val": 10222.46}, {"id": "L1780093148146", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Natalia Picanço", "status": "Pago", "mes": "Maio", "data": "2026-05-29", "val": 599.68}, {"id": "L1780399803714", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Thatiana Abelha", "status": "Pago", "mes": "Maio", "data": "2026-05-27", "val": 479.36}, {"id": "L1780435150604", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Alessandra Nunes, Patrícia Barreto", "status": "Pago", "mes": "Maio", "data": "2026-05-27", "val": 402.0}, {"id": "L1780943099526", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "João Victor", "status": "Pago", "mes": "Junho", "data": "2026-06-08", "val": 454.72}, {"id": "L1781007944179", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Ivana , M Eduarda e Roberta", "status": "Pago", "mes": "Junho", "data": "2026-06-02", "val": 767.2}, {"id": "L1781012667563", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Felipe gonzalez", "status": "Pago", "mes": "Maio", "data": "2026-05-29", "val": 465.36}, {"id": "L1781012733981", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Flavia Perroni", "status": "Pago", "mes": "Maio", "data": "2026-05-25", "val": 141.95}, {"id": "L1781012779215", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Matias", "status": "Pago", "mes": "Maio", "data": "2026-05-19", "val": 404.82}, {"id": "L1781013598146", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Priscila Campos", "status": "Pago", "mes": "Maio", "data": "2026-05-18", "val": 1119.83}, {"id": "L1781013673961", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Gilmar zonzin", "status": "Pago", "mes": "Junho", "data": "2026-06-01", "val": 762.19}, {"id": "L1781013742076", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Susan Tabasnik", "status": "Pago", "mes": "Maio", "data": "2026-05-25", "val": 1025.58}, {"id": "L1781013786352", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Christiane Saliba", "status": "Pago", "mes": "Maio", "data": "2026-05-26", "val": 161.7}, {"id": "L1781013845293", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Fabrício Prado", "status": "Pago", "mes": "Maio", "data": "2026-05-27", "val": 740.3}, {"id": "L1781013895466", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Andréia Perazzio", "status": "Pago", "mes": "Maio", "data": "2026-05-27", "val": 193.6}, {"id": "L1781013948345", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Katia Portinho", "status": "Pago", "mes": "Maio", "data": "2026-05-28", "val": 193.61}, {"id": "L1781014009999", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Danielle Hosken", "status": "Pago", "mes": "Junho", "data": "2026-06-01", "val": 817.2}, {"id": "L1781014101914", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Bruno Martins, Guilherme Ramos, Roberta Laurindo, Renata Braga, Isabela Martins, Luana", "status": "Pago", "mes": "Junho", "data": "2026-06-04", "val": 4057.99}, {"id": "L1781014141667", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Anna Carolina Arraes", "status": "Pago", "mes": "Junho", "data": "2026-06-06", "val": 1431.36}, {"id": "L1781303493586", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Marcia martin", "status": "Pago", "mes": "Junho", "data": "2026-06-01", "val": 364.49}, {"id": "L1781528608411", "ger": "Marlon Costa", "cons": "Rafaela Correa", "ind": "NP", "fra": "Rino", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Priscila Geller", "status": "Pago", "mes": "Junho", "data": "2026-06-11", "val": 977.5}, {"id": "L1781530391134", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Sheila Ramos", "status": "Pago", "mes": "Junho", "data": "2026-06-09", "val": 435.68}, {"id": "L1781530674131", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Márcia Carreira", "status": "Pago", "mes": "Junho", "data": "2026-06-10", "val": 375.08}, {"id": "L1781530708185", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Ana Gessy", "status": "Pago", "mes": "Junho", "data": "2026-06-12", "val": 198.0}, {"id": "L1781610471172", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rossi Bastos", "status": "Pago", "mes": "Junho", "data": "2026-06-15", "val": 158.29}, {"id": "L1781636360918", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Jornada Asma", "status": "Pago", "mes": "Junho", "data": "2026-06-13", "val": 2277.52}, {"id": "L1781636397536", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Renato Azambuja", "status": "Pago", "mes": "Junho", "data": "2026-06-16", "val": 864.41}, {"id": "L1782132975936", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "DPOC", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Daniele Jotha, Juliana, Paula e Isadora", "status": "Pago", "mes": "Junho", "data": "2026-06-17", "val": 888.16}, {"id": "L1782133145419", "ger": "Marlon Costa", "cons": "Angélica Silva", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Camila Ventura", "status": "Pago", "mes": "Junho", "data": "2026-06-16", "val": 191.44}, {"id": "L1782171940514", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Mariana Rust", "status": "Pago", "mes": "Junho", "data": "2026-06-19", "val": 654.67}, {"id": "L1782172245912", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Rafael Galvão", "status": "Pago", "mes": "Junho", "data": "2026-06-18", "val": 8732.56}, {"id": "L1782172461533", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Marketing", "medico": "", "status": "Planejado", "mes": "Agosto", "data": "2026-08-01", "val": 12000.0}, {"id": "L1782172499476", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Marketing", "medico": "", "status": "Planejado", "mes": "Setembro", "data": "2026-09-01", "val": 12000.0}, {"id": "L1782172764157", "ger": "Marlon Costa", "cons": "Tassia Novais", "ind": "Asma", "fra": "Resp", "tipo": "Speaker Meetings", "tipoAp": "", "soc": "", "verba": "Verba Marketing", "medico": "", "status": "Planejado", "mes": "Julho", "data": "2026-07-01", "val": 12000.0}, {"id": "L1782389106070", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Aline Ognibeni", "status": "Pago", "mes": "Junho", "data": "2026-06-22", "val": 107.76}, {"id": "L1782389216231", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Simone Boggi", "status": "Pago", "mes": "Junho", "data": "2026-06-23", "val": 194.32}, {"id": "L1782787383933", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "", "medico": "Sabrina Cavalcanti", "status": "Pago", "mes": "Junho", "data": "2026-06-22", "val": 375.1}, {"id": "L1782787431527", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Café", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Fabrício Prado", "status": "Pago", "mes": "Junho", "data": "2026-06-22", "val": 126.5}, {"id": "L1782787473479", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Felipe Vieira", "status": "Pago", "mes": "Junho", "data": "2026-06-24", "val": 556.6}, {"id": "L1782787535761", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Roberta Roldi", "status": "Pago", "mes": "Junho", "data": "2026-06-25", "val": 183.7}, {"id": "L1782787597868", "ger": "Marlon Costa", "cons": "Elaíne Azevedo", "ind": "DPOC", "fra": "Resp", "tipo": "Jantar", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Amanda Velten, Luiza Tatagiba e Jéssica", "status": "Pago", "mes": "Junho", "data": "2026-06-25", "val": 928.4}, {"id": "L1782950377995", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Sérgio Dortas", "status": "Pago", "mes": "Junho", "data": "2026-06-25", "val": 369.6}, {"id": "L1782950478370", "ger": "Marlon Costa", "cons": "Silvia Cunha", "ind": "Asma", "fra": "Resp", "tipo": "Almoço", "tipoAp": "", "soc": "", "verba": "Verba Regional", "medico": "Marcia Mattos, Cleusa Genn", "status": "Pago", "mes": "Julho", "data": "2026-07-01", "val": 786.5}];
 
 // ── ESTADO FINANCEIRO (totais reais da planilha) ──────────────────────────────
 const D = {
   orc: {Resp:180000,Rino:120000},
-  pago:{Resp:21473, Rino:8526},
-  plan:{Resp:50000, Rino:45000},
-  comp:{Resp:71473, Rino:53526},
-  saldo:{Resp:108527,Rino:66474,Derma:255234,Rhyno:66474,Gastro:40483},
-  pct: {Resp:0.397, Rino:0.446, Derma:0.291, Rhyno:0.446, Gastro:0.325},
-  monthly:{Resp:[21473,0,0,0,0,0,0,0,0,0,0,0],Rino:[8526,0,0,0,0,0,0,0,0,0,0,0]},
-  qtr:{pago:{Resp:[21473,0,0,0],Rino:[8526,0,0,0],Derma:[14766,0,0,0],Rhyno:[8526,0,0,0],Gastro:[4517,0,0,0]},plan:{Resp:[0,75000,0,0],Rino:[0,45000,0,0],Derma:[0,140000,0,0],Rhyno:[0,20000,25000,0],Gastro:[0,0,15000,0]}},
-  cons:{"Angélica Silva":{pago:2506,comp:2506},"Elaíne Azevedo":{pago:4591,comp:4591},"Tassia Novais":{pago:8177,comp:8177},"Silvia Cunha":{pago:6200,comp:6200},"Greice Morais":{pago:6779,comp:6779},"Caroline Pereira":{pago:2686,comp:2686},"Vagner Elias":{pago:2738,comp:2738},"Eduardo Reis":{pago:2563,comp:2563},"Eduardo de Deus":{pago:4517,comp:4517},"Rafaela Correa":{pago:8526,comp:28526},"Dayane Olivieri":{pago:0,comp:0}},
-  // novos lançamentos desta sessão (persistidos no localStorage)
+  pago:{Resp:0,Rino:0},
+  plan:{Resp:0,Rino:0},
+  comp:{Resp:0,Rino:0},
+  saldo:{Resp:180000,Rino:120000},
+  pct: {Resp:0,Rino:0},
+  monthly:{Resp:[0,0,0,0,0,0,0,0,0,0,0,0],Rino:[0,0,0,0,0,0,0,0,0,0,0,0]},
+  qtr:{pago:{Resp:[0,0,0,0],Rino:[0,0,0,0]},plan:{Resp:[0,0,0,0],Rino:[0,0,0,0]}},
+  cons:{"Angélica Silva":{pago:0,comp:0},"Elaíne Azevedo":{pago:0,comp:0},"Silvia Cunha":{pago:0,comp:0},"Mariana Costa":{pago:0,comp:0},"Fabiano Cortez":{pago:0,comp:0},"Francisco Neto":{pago:0,comp:0},"Cassandra Andrade":{pago:0,comp:0},"Joanna Macedo":{pago:0,comp:0},"Rafaela Correa":{pago:0,comp:0},"Fernando Maia":{pago:0,comp:0},"Thiago Martins":{pago:0,comp:0},"Marco Rocha":{pago:0,comp:0},"Saulo Guedes":{pago:0,comp:0}},
   sess: []
 };
 
@@ -797,8 +834,8 @@ function mk(id,type,data,opt){
 }
 
 // ── SENHA GLOBAL DO APP ───────────────────────────────────────────────────────
-const APP_PW  = '@rinoresp';
-const APP_KEY = 'dupihub_app_auth_v2';
+const APP_PW  = 'Rino@Resp#2026!';
+const APP_KEY = 'dupihub_app_auth_v4';
 
 function isAppUnlocked(){
   return localStorage.getItem(APP_KEY) === '1';
@@ -852,13 +889,6 @@ function unlockApp(){
 }
 
 function lockApp(){
-  // Blur content in all pages
-  document.querySelectorAll('.app-blur').forEach(el=>{
-    el.style.filter='blur(6px)';
-    el.style.pointerEvents='none';
-    el.style.userSelect='none';
-  });
-  // Disable lancForm inputs
   document.querySelectorAll('#lancForm input, #lancForm select, #lancForm button').forEach(el=>{
     el.disabled=true; el.style.opacity='0.4'; el.style.cursor='not-allowed';
   });
@@ -938,6 +968,8 @@ function buildCalendar(){
     if(!d) return null;
     d = String(d).trim();
     if(!d) return null;
+    // Tratar ISO com T: 2026-07-01T00:00:00
+    if(d.length > 10 && (d[10] === 'T' || d[10] === ' ')) d = d.substring(0,10);
     if(d.match(/^\d{4}-\d{2}-\d{2}/)) return d.substring(0,10);
     if(d.match(/^\d{2}\/\d{2}\/\d{4}/)){
       const [dd,mm,yy] = d.split('/'); return yy+'-'+mm+'-'+dd;
@@ -948,7 +980,7 @@ function buildCalendar(){
   evts.forEach(e=>{
     const dt = normDate(e.data);
     if(dt && dt.startsWith(mesPrefix)){
-      const parts = dt.split('-');
+      const parts = dt ? dt.split('-') : [];
       const day = parts.length >= 3 ? parseInt(parts[2]) : NaN;
       if(!isNaN(day) && day >= 1 && day <= 31){
         if(!dayEvts[day]) dayEvts[day]=[];
@@ -970,12 +1002,7 @@ function buildCalendar(){
     const bg     = dayEvs.length ? 'var(--sf)' : 'var(--sf2)';
 
     // Cores por consultor
-    const CC = {
-      'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Tassia Novais':'#f59e0b',
-      'Silvia Cunha':'#ef4444','Greice Morais':'#a855f7','Caroline Pereira':'#ec4899',
-      'Vagner Elias':'#0891b2','Eduardo Reis':'#f97316','Eduardo de Deus':'#84cc16',
-      'Rafaela Correa':'#6366f1','Dayane Olivieri':'#14b8a6','Regional':'#e2e8f0'
-    };
+    const CC = {"Angélica Silva":"#1d9e75","Elaíne Azevedo":"#185fa5","Silvia Cunha":"#f59e0b","Mariana Costa":"#ef4444","Fabiano Cortez":"#a855f7","Francisco Neto":"#ec4899","Cassandra Andrade":"#0891b2","Joanna Macedo":"#f97316","Rafaela Correa":"#84cc16","Fernando Maia":"#6366f1","Thiago Martins":"#14b8a6","Marco Rocha":"#f43f5e","Saulo Guedes":"#8b5cf6"};
     // Render cada evento como pill dentro da célula
     const eventPills = dayEvs.slice(0,3).map(e=>{
       const c      = CC[e.cons] || '#8890b0';
@@ -1075,7 +1102,7 @@ function gauges(){
   const c=document.getElementById('gauges'); if(!c)return; c.innerHTML='';
   FR.forEach(f=>{
     const p=D.pct[f],z=p<.6?'#1d9e75':p<.8?'#ba7517':'#c62828';
-    const a=Math.PI*(1-p),nx=70+52*Math.cos(a),ny=68-52*Math.sin(a);
+    const a=(180-p*180)*Math.PI/180,nx=70+52*Math.cos(a),ny=68-52*Math.sin(a);
     c.innerHTML+=`<div class="gc"><div class="gt" style="color:${FL[f]}">${f}</div>
     <div style="width:120px;height:75px;margin:0 auto .4rem"><svg viewBox="0 0 140 80" style="width:100%;height:100%">
       <path d="M10 70 A60 60 0 0 1 70 10" fill="none" stroke="#1e3a8a" stroke-width="12" stroke-linecap="round"/>
@@ -1148,7 +1175,17 @@ function barH(){
   });
 }
 
-function donut(){mk('cDonut','doughnut',{labels:FR,datasets:[{data:FR.map(f=>D.comp[f]),backgroundColor:FR.map(f=>FL[f]),borderColor:'#1a1d27',borderWidth:3,hoverOffset:8}]},{plugins:{legend:{position:'right',labels:{color:'#8890b0',font:{size:9},boxWidth:9}}},cutout:'58%'})}
+function donut(){
+  const total = FR.reduce((s,f)=>s+(D.comp[f]||0),0);
+  mk('cDonut','doughnut',
+    {labels:FR,datasets:[{data:FR.map(f=>D.comp[f]||0),backgroundColor:FR.map(f=>FL[f]),borderColor:'#1a1d27',borderWidth:3,hoverOffset:8}]},
+    {plugins:{
+      legend:{position:'right',labels:{color:'#8890b0',font:{size:9},boxWidth:9}},
+      tooltip:{callbacks:{label:c=>`${c.label}: ${f0(c.raw)} (${total?fp(c.raw/total):'0%'})`}},
+      datalabels:{display:true,color:'#ffffff',font:{size:12,weight:'bold'},textStrokeColor:'rgba(0,0,0,0.6)',textStrokeWidth:3,formatter:(val)=>{ const p=total?Math.round(val/total*100):0; return p>3?p+'%':''; }}
+    },cutout:'58%'}
+  );
+}
 
 function line(){mk('cLine','line',{labels:MN,datasets:FR.map(f=>({label:f,data:D.monthly[f],borderColor:FC[f],backgroundColor:FC[f]+'33',pointBackgroundColor:FC[f],tension:.35,fill:false,pointRadius:3}))},{scales:AX})}
 
@@ -1273,23 +1310,11 @@ function consDonutsFranquia(){
   // Regra: Almoço, Jantar e Café são tratados como RN no painel
   const RN_TIPOS = ['Almoço','Jantar','Café','Refeição de Negócios (RN)'];
   const TIPOS = ['Speaker Meetings','Coffee Break','Apoio Sociedade','Apoio Prestador','Refeição de Negócios (RN)'];
-  const FRANQUIAS = ['Resp','Derma','Rhyno','Gastro'];
+  const FRANQUIAS = ['Resp','Rino'];
   const FR_COLORS  = { Resp:'#185fa5', Derma:'#1d9e75', Rhyno:'#a855f7', Gastro:'#f59e0b' };
-  const CONS_LIST  = ['Angelica Silva','Cassandra Andrade','Elaine Azevedo','Fabiano Cortez',
-                      'Francisco Neto','Joanna Macedo','Mariana Costa','Silvia Cunha',
-                      'Fernando Maia','Marco Rocha','Rafaela Correa','Saulo Guedes','Thiago Martins','Regional'];
-  const CONS_SHORT = {'Angelica Silva':'Angelica','Cassandra Andrade':'Cassandra','Elaine Azevedo':'Elaine',
-                      'Fabiano Cortez':'Fabiano','Francisco Neto':'Francisco','Joanna Macedo':'Joanna',
-                      'Mariana Costa':'Mariana','Silvia Cunha':'Silvia','Fernando Maia':'Fernando',
-                      'Marco Rocha':'Marco','Rafaela Correa':'Rafaela','Saulo Guedes':'Saulo',
-                      'Thiago Martins':'Thiago','Regional':'Regional'};
-  const CONS_COLORS = {
-    'Angelica Silva':'#16a34a','Cassandra Andrade':'#0891b2','Elaine Azevedo':'#7c3aed',
-    'Fabiano Cortez':'#ea580c','Francisco Neto':'#0284c7','Joanna Macedo':'#db2777',
-    'Mariana Costa':'#65a30d','Silvia Cunha':'#dc2626','Fernando Maia':'#d97706',
-    'Marco Rocha':'#0d9488','Rafaela Correa':'#6366f1','Saulo Guedes':'#14b8a6',
-    'Thiago Martins':'#f59e0b','Regional':'#6b7280'
-  };
+  const CONS_LIST = ['Angélica Silva','Elaíne Azevedo','Silvia Cunha','Mariana Costa','Fabiano Cortez','Francisco Neto','Cassandra Andrade','Joanna Macedo','Rafaela Correa','Fernando Maia','Thiago Martins','Marco Rocha','Saulo Guedes'];
+  const CONS_SHORT = {'Angélica Silva':'Angélica','Elaíne Azevedo':'Elaíne','Silvia Cunha':'Silvia','Mariana Costa':'Mariana','Fabiano Cortez':'Fabiano','Francisco Neto':'Francisco','Cassandra Andrade':'Cassandra','Joanna Macedo':'Joanna','Rafaela Correa':'Rafaela','Fernando Maia':'Fernando','Thiago Martins':'Thiago','Marco Rocha':'Marco','Saulo Guedes':'Saulo','Regional':'Regional'};
+  const CONS_COLORS = {'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Silvia Cunha':'#f59e0b','Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899','Cassandra Andrade':'#0891b2','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16','Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e','Saulo Guedes':'#8b5cf6','Regional':'#6b7280'};
   const TIPO_COLORS = {
     'Speaker Meetings':'#185fa5','Coffee Break':'#c62828','Apoio Sociedade':'#f59e0b',
     'Apoio Prestador':'#f97316','Refeição de Negócios (RN)':'#1d9e75'
@@ -1378,7 +1403,7 @@ function consDonutsFranquia(){
 
   // ── RANKING CONSULTORES ───────────────────────────────────────────────────
   out += '<div style="background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:.75rem">';
-  out += '<div style="font-size:.72rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem">Ranking por Consultor</div>';
+  out += '<div style="font-size:.72rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem">Painel Consultores</div>';
 
   const ranking = CONS_LIST
     .map(c=>({c, ...consCount[c]}))
@@ -1412,20 +1437,7 @@ function consBubble(){
   const ks = Object.keys(D.cons);
   const tO = FR.reduce((s,f)=>s+D.orc[f],0);
   // Each consultant gets a truly unique color
-  const CONS_COLORS = {
-    'Angélica Silva':   '#1d9e75',  // verde
-    'Elaíne Azevedo':   '#185fa5',  // azul
-    'Tassia Novais':    '#f59e0b',  // amarelo
-    'Silvia Cunha':     '#ef4444',  // vermelho
-    'Greice Morais':    '#a855f7',  // roxo
-    'Caroline Pereira': '#ec4899',  // rosa
-    'Vagner Elias':     '#0891b2',  // ciano
-    'Eduardo Reis':     '#f97316',  // laranja
-    'Eduardo de Deus':  '#84cc16',  // verde-limão
-    'Rafaela Correa':   '#6366f1',  // índigo
-    'Dayane Olivieri':  '#14b8a6',  // teal
-    'Regional':         '#e2e8f0',  // branco
-  };
+  const CONS_COLORS = {'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Silvia Cunha':'#f59e0b','Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899','Cassandra Andrade':'#0891b2','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16','Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e','Saulo Guedes':'#8b5cf6','Regional':'#6b7280'};
   const COLORS = Object.values(CONS_COLORS);
 
   // Each consultant = one bubble
@@ -1548,7 +1560,7 @@ function burnRate(){
 
 function tipoCharts(){
   const L=allLancs();
-  const inds=['Asma','DPOC','DA','PN','UCE','EoE','NP'];
+  const inds=['Asma','DPOC','RSCcPN','RFSA'];
   mk('cTF','bar',{labels:FR,datasets:TPS.map((t,i)=>({label:TPS_S[i],data:FR.map(f=>L.filter(l=>l.tipo===t&&l.fra===f).reduce((s,l)=>s+l.val,0)),backgroundColor:TC[i],stack:'s'}))},{scales:AX,plugins:{legend:{labels:{color:'#8890b0',font:{size:8},boxWidth:8}}}});
   const ks=Object.keys(D.cons);
   mk('cTC','bar',{labels:ks.map(c=>c.split(' ')[0]),datasets:TPS.map((t,i)=>({label:TPS_S[i],data:ks.map(c=>L.filter(l=>l.tipo===t&&l.cons===c).reduce((s,l)=>s+l.val,0)),backgroundColor:TC[i],stack:'s'}))},{scales:AX,plugins:{legend:{labels:{color:'#8890b0',font:{size:8},boxWidth:8}}}});
@@ -1563,7 +1575,7 @@ function statusCharts(){
 
 function autoFra(){
   const i=document.getElementById('e-ind').value;
-  const m={Asma:'Resp',DPOC:'Resp',DA:'Derma',UCE:'Derma',PN:'Derma',NP:'Rhyno',EoE:'Gastro'};
+  const m={Asma:'Resp',DPOC:'Resp',RSCcPN:'Rino',RFSA:'Rino'};
   if(m[i])document.getElementById('e-fra').value=m[i];
 }
 
@@ -1713,13 +1725,9 @@ function updateTotals(fra, cons, mes, val, status, signal){
   // Atualiza monthly
   const MF = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const mi = MF.indexOf(mes);
-  if(!D.monthly[fra]) D.monthly[fra]=[0,0,0,0,0,0,0,0,0,0,0,0];
   if(mi>=0) D.monthly[fra][mi] = (D.monthly[fra][mi]||0) + s*val;
   // Atualiza quarters
   const qi = mesToQ(mes);
-  if(!D.qtr.pago[fra]) D.qtr.pago[fra]=[0,0,0,0];
-  if(!D.qtr.plan[fra]) D.qtr.plan[fra]=[0,0,0,0];
-  if(!D.monthly[fra])  D.monthly[fra]=[0,0,0,0,0,0,0,0,0,0,0,0];
   if(isPago) D.qtr.pago[fra][qi] = (D.qtr.pago[fra][qi]||0) + s*val;
   else       D.qtr.plan[fra][qi] = (D.qtr.plan[fra][qi]||0) + s*val;
 }
@@ -1738,7 +1746,7 @@ function addEvento(){
   const hcps   = g('ev-hcps');
   const palest = g('ev-palest');
   const verba  = g('ev-vrb');
-  const medico = document.getElementById('ev-med').value.trim();
+  const medico = '';
   const mes    = g('ev-mes');
   const data   = g('ev-dat');
   const val    = parseFloat(g('ev-val'))||0;
@@ -1788,7 +1796,7 @@ function addLanc(){
   const g=id=>document.getElementById(id).value;
   const ger=g('e-ger'),cons=g('e-cons'),ind=g('e-ind'),fra=g('e-fra');
   const tipo=g('e-tipo'),verba=g('e-vrb');
-  const medico=document.getElementById('e-med').value.trim();
+  const medico='';
   const mes=g('e-mes'),data=g('e-dat');
   const val=parseFloat(g('e-val'))||0;
   const status='Pago'; // RN é sempre Pago
@@ -1797,15 +1805,13 @@ function addLanc(){
   if(!ind){showError('Selecione a Indicação.');return}
   if(!fra){showError('Selecione a Franquia.');return}
   if(!tipo){showError('Selecione o Tipo de RN (Almoço, Jantar ou Café).');return}
-  if(!medico){showError('⚕️ Informe o Médico Engajado — obrigatório para RN.');document.getElementById('e-med').focus();return}
   if(!mes){showError('Selecione o Mês.');return}
   if(!data){showError('Informe a Data do lançamento.');document.getElementById('e-dat').focus();return}
   if(!val){showError('Informe o Valor Investido.');return}
   const lanc = {ger,cons,ind,fra,tipo,tipoAp:'',soc:'',verba,medico,status,mes,data,val,_tipo_origem:'rn',_id:null};
   D.sess.push(lanc);
   updateTotals(fra, cons, mes, val, status, +1);
-  ['e-ind','e-tipo','e-vrb','e-mes','e-dat'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';if(el.disabled!==undefined)el.disabled=false;}});
-  document.getElementById('e-med').value='';document.getElementById('e-val').value='';document.getElementById('e-fra').value='';
+  ['e-ger','e-cons','e-ind','e-fra','e-tipo','e-vrb','e-mes','e-dat','e-val'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';if(el.tagName==='SELECT')el.selectedIndex=0;}});
   renderLanc();buildAll();
   // Mostra confirmação imediatamente
   showToast(cons, medico||'—', f2(val), tipo, data);
@@ -1942,7 +1948,7 @@ function renderLanc(){
     <td><span class="bx b-${(l.fra||'').toLowerCase()}">${l.fra||'—'}</span></td>
     <td style="font-size:.72rem">${l.tipo||'—'}${l.tipoAp?' · '+l.tipoAp:''}</td>
     <td style="color:var(--mu);font-size:.7rem">${l.prest||l.soc||'—'}</td>
-    <td title="${l.medico||''}">${l.medico||'—'}</td>
+    
     <td><span class="bx ${sc[l.status]||''}">${l.status||'—'}</span></td>
     <td>${l.mes||'—'}</td>
     <td class="nr" style="white-space:nowrap">${f2(l.val)}</td>
@@ -2062,7 +2068,7 @@ function showPage(id,btn){
 function exportExcel(){
   const wb=XLSX.utils.book_new();
   const h=['Gerente','Consultor','Indicação','Franquia','Tipo Investimento','Tipo Apoio','Sociedade','Verba OI','Médico','Status','Mês','Data','Valor (R$)'];
-  const rows=allLancs().map(l=>[l.ger,l.cons,l.ind,l.fra,l.tipo,l.tipoAp,l.soc,l.verba,l.medico,l.status,l.mes,l.data,l.val]);
+  const rows=allLancs().map(l=>[l.ger,l.cons,l.ind,l.fra,l.tipo,l.tipoAp,l.soc,l.verba,l.status,l.mes,l.data,l.val]);
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([h,...rows]),'Lançamentos');
   const hF=['Franquia','Orçamento','Pago','Planejado','Comprometido','Saldo','%'];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([hF,...FR.map(f=>[f,D.orc[f],D.pago[f],D.plan[f],D.comp[f],D.saldo[f],fp(D.pct[f])])]),'Resumo Franquia');
@@ -2070,12 +2076,12 @@ function exportExcel(){
 }
 
 function exportWord(){
-  const rows=allLancs().map(l=>`<tr><td>${l.ger||'—'}</td><td>${l.cons}</td><td>${l.ind||'—'}</td><td>${l.fra||'—'}</td><td>${l.tipo||'—'}</td><td>${l.tipoAp||'—'}</td><td>${l.soc||'—'}</td><td>${l.verba||'—'}</td><td>${l.medico||'—'}</td><td>${l.status||'—'}</td><td>${l.mes||'—'}</td><td>${l.data||'—'}</td><td>R$ ${l.val.toFixed(2)}</td></tr>`).join('');
+  const rows=allLancs().map(l=>`<tr><td>${l.ger||'—'}</td><td>${l.cons}</td><td>${l.ind||'—'}</td><td>${l.fra||'—'}</td><td>${l.tipo||'—'}</td><td>${l.tipoAp||'—'}</td><td>${l.soc||'—'}</td><td>${l.verba||'—'}</td><td>${l.status||'—'}</td><td>${l.mes||'—'}</td><td>${l.data||'—'}</td><td>R$ ${l.val.toFixed(2)}</td></tr>`).join('');
   const fr=FR.map(f=>`<tr><td>${f}</td><td>R$ ${D.orc[f].toLocaleString('pt-BR')}</td><td>R$ ${D.pago[f].toLocaleString('pt-BR')}</td><td>R$ ${D.comp[f].toLocaleString('pt-BR')}</td><td>R$ ${D.saldo[f].toLocaleString('pt-BR')}</td><td>${fp(D.pct[f])}</td></tr>`).join('');
   const htm=`<html><head><meta charset="UTF-8"><style>body{font-family:Arial;font-size:10pt;margin:2cm}h1{color:#1d9e75;font-size:14pt}h2{color:#185fa5;font-size:11pt;margin-top:16px}table{width:100%;border-collapse:collapse;font-size:8pt;margin-top:5px}th{background:#1a1a2e;color:white;padding:3px 5px;text-align:left}td{padding:3px 5px;border-bottom:1px solid #ddd}tr:nth-child(even)td{background:#f5f5f5}.ft{margin-top:24px;font-size:8pt;color:#888;text-align:center}</style></head><body>
   <h1>DupiHub — Relatório Verba Regional 2026</h1><p style="color:#888;font-size:8pt">GR Marlon Costa · ${new Date().toLocaleDateString('pt-BR')}</p>
   <h2>Resumo por Franquia</h2><table><thead><tr><th>Franquia</th><th>Orçamento</th><th>Pago</th><th>Comprometido</th><th>Saldo</th><th>%</th></tr></thead><tbody>${fr}</tbody></table>
-  <h2>Lançamentos (${allLancs().length})</h2><table><thead><tr><th>Gerente</th><th>Consultor</th><th>Indicação</th><th>Franquia</th><th>Tipo</th><th>Apoio</th><th>Sociedade</th><th>Verba</th><th>Médico</th><th>Status</th><th>Mês</th><th>Data</th><th>Valor</th></tr></thead><tbody>${rows||'<tr><td colspan="13" style="text-align:center">Sem lançamentos</td></tr>'}</tbody></table>
+  <h2>Lançamentos (${allLancs().length})</h2><table><thead><tr><th>Gerente</th><th>Consultor</th><th>Indicação</th><th>Franquia</th><th>Tipo</th><th>Apoio</th><th>Sociedade</th><th>Verba</th><th>Status</th><th>Mês</th><th>Data</th><th>Valor</th></tr></thead><tbody>${rows||'<tr><td colspan="12" style="text-align:center">Sem lançamentos</td></tr>'}</tbody></table>
   <div class="ft">Made by Marlon Costa · DupiHub v2.0 · Dupixent 2026</div>
 <!-- EDIT MODAL -->
 <div id="editModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000aa;z-index:9999;align-items:center;justify-content:center;padding:1rem">
@@ -2200,9 +2206,9 @@ function exportPDF(){window.print();}
 
 // ── INTEGRAÇÃO GOOGLE SHEETS ──────────────────────────────────────────────────
 // Cole aqui a URL gerada pelo Google Apps Script após implantar:
-const _DEFAULT_API = 'https://script.google.com/macros/s/AKfycbzbxo8svIsFE7knu4btCzgU7LvOvRyw0ajYvtYXWMuCM3djC0AKtihd3B950FvbKsHe/exec';
+const _DEFAULT_API = 'https://script.google.com/macros/s/AKfycbwet052_xV1OrbyyYjzFl-sHqr8a7fgxhFWUDpBN1nGlIcZQQqhOFqPPJiwOkZiwDKc/exec';
 // Sempre garante que a URL correta está salva no localStorage
-if(!localStorage.getItem('dupihub_api_url') || localStorage.getItem('dupihub_api_url').indexOf('AKfycbzbxo8sv') === -1){
+if(!localStorage.getItem('dupihub_api_url') || localStorage.getItem('dupihub_api_url').indexOf('AKfycbwet052') === -1){
   localStorage.setItem('dupihub_api_url', _DEFAULT_API);
 }
 let API_URL = _DEFAULT_API;
@@ -2255,12 +2261,13 @@ async function loadFromSheets(silent=false){
           const [dd,mm,yy] = dataStr.split('/');
           dataStr = yy+'-'+mm+'-'+dd;
         }
-        // Remove time part if present (e.g. "2026-04-15 00:00:00")
-        if(dataStr.length > 10 && dataStr[10] === ' ') dataStr = dataStr.substring(0,10);
+        // Remove time part if present (e.g. "2026-04-15 00:00:00" or "2026-04-15T00:00:00")
+        if(dataStr.length > 10 && (dataStr[10] === ' ' || dataStr[10] === 'T')) dataStr = dataStr.substring(0,10);
         return {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
       });
     // Aplica totais novos
     D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); });
+    renderLanc(); buildAll();
     // Update API status indicator
     const lbl = document.getElementById('apiBtnLabel');
     const ico = document.getElementById('apiBtnIcon');
@@ -2276,9 +2283,7 @@ async function loadFromSheets(silent=false){
     if(lblE){ lblE.textContent='● erro'; lblE.style.color='#c62828'; }
     if(icoE) icoE.setAttribute('stroke','#c62828');
     if(!silent) setBanner('❌ Falha na conexão: ' + e.message,'#c62828');
-    return;
   }
-  renderLanc(); buildAll();
 }
 
 // Envia novo lançamento para o Google Sheets
@@ -2307,7 +2312,8 @@ async function apiAdd(lancamento){
   API_URL = url;
 
   const params = {
-    action:'add', sheet:'Lançamentos_S2',
+    action:'add',
+    sheet:'Lançamentos_S2',
     ger:    lancamento.ger    ||'',
     cons:   lancamento.cons   ||'',
     ind:    lancamento.ind    ||'',
@@ -2372,7 +2378,7 @@ async function apiAdd(lancamento){
 async function apiEdit(id, lancamento){
   if(!API_URL || !id) return;
   await gasRequest({
-    action:'edit', id:id, sheet:'Lançamentos_S2',
+    action:'edit', id:id,
     ger:   lancamento.ger   ||'',
     cons:  lancamento.cons  ||'',
     ind:   lancamento.ind   ||'',
@@ -2394,7 +2400,7 @@ async function apiDelete(id){
   const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
   if(!url) return;
   try {
-    const fullUrl = url + '?action=delete&id=' + encodeURIComponent(id) + '&sheet=Lan%C3%A7amentos_S2';
+    const fullUrl = url + '?action=delete&id=' + encodeURIComponent(id);
     const res = await fetch(fullUrl, { method:'GET', redirect:'follow' });
     const text = await res.text();
     let json; try{ json=JSON.parse(text); }catch(e){}
@@ -2709,13 +2715,7 @@ function renderViagemCal(){
   });
 
   // Unique colors per consultant
-  const CONS_CAL_COLORS = {
-    'Angelica Silva':'#16a34a','Cassandra Andrade':'#0891b2','Elaine Azevedo':'#7c3aed',
-    'Fabiano Cortez':'#ea580c','Francisco Neto':'#0284c7','Joanna Macedo':'#db2777',
-    'Mariana Costa':'#65a30d','Silvia Cunha':'#dc2626','Fernando Maia':'#d97706',
-    'Marco Rocha':'#0d9488','Rafaela Correa':'#6366f1','Saulo Guedes':'#14b8a6',
-    'Thiago Martins':'#f59e0b','Regional':'#6b7280'
-  };
+  const CONS_CAL_COLORS = {'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Silvia Cunha':'#f59e0b','Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899','Cassandra Andrade':'#0891b2','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16','Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e','Saulo Guedes':'#8b5cf6','Regional':'#6b7280'};
 
   let out = '';
 
@@ -2772,12 +2772,7 @@ function renderViagemResumo(){
   };
   // Sort by IDA date
   const sorted = [...VIAGENS].sort((a,b)=>(a.ida||'').localeCompare(b.ida||''));
-  const CONS_C2 = {
-    'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Tassia Novais':'#f59e0b',
-    'Silvia Cunha':'#ef4444','Greice Morais':'#a855f7','Caroline Pereira':'#ec4899',
-    'Vagner Elias':'#0891b2','Eduardo Reis':'#f97316','Eduardo de Deus':'#84cc16',
-    'Rafaela Correa':'#6366f1','Dayane Olivieri':'#14b8a6'
-  };
+  const CONS_C2 = {'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Silvia Cunha':'#f59e0b','Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899','Cassandra Andrade':'#0891b2','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16','Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e','Saulo Guedes':'#8b5cf6','Regional':'#6b7280'};
   tb.innerHTML = sorted.map(v => {
     const c = CONS_C2[v.cons] || '#8890b0';
     return `<tr>
@@ -2822,7 +2817,7 @@ async function loadViagensFromSheets(){
   if(!url) return;
   try {
     setBanner('🔄 Carregando viagens...','#185fa5');
-    const res  = await fetch(url+'?action=getAllViagens', {method:'GET', redirect:'follow'});
+    const res  = await fetch(url+'?action=getAllViagens', {method:'GET', redirect:'follow', mode:'cors'});
     const text = await res.text();
     let json; try{ json=JSON.parse(text); }catch(e){ return; }
     if(json && json.status==='ok' && Array.isArray(json.data) && json.data.length > 0){
@@ -2898,6 +2893,7 @@ function exportWbsWord(){
 
 window.addEventListener('load',()=>{
   loadBudget();
+  HIST.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); });
   initAppLock();
   buildAll();
   renderLanc();
