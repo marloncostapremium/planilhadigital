@@ -1756,8 +1756,12 @@ function updateTotals(fra, cons, mes, val, status, signal){
   if(mi>=0) D.monthly[fra][mi] = (D.monthly[fra][mi]||0) + s*val;
   // Atualiza quarters
   const qi = mesToQ(mes);
-  if(isPago) D.qtr.pago[fra][qi] = (D.qtr.pago[fra][qi]||0) + s*val;
-  else       D.qtr.plan[fra][qi] = (D.qtr.plan[fra][qi]||0) + s*val;
+  if(qi >= 0){
+    if(!D.qtr.pago[fra]) D.qtr.pago[fra]=[0,0,0,0];
+    if(!D.qtr.plan[fra]) D.qtr.plan[fra]=[0,0,0,0];
+    if(isPago) D.qtr.pago[fra][qi] = (D.qtr.pago[fra][qi]||0) + s*val;
+    else       D.qtr.plan[fra][qi] = (D.qtr.plan[fra][qi]||0) + s*val;
+  }
 }
 
 function addEvento(){
