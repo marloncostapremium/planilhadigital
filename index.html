@@ -2298,9 +2298,12 @@ async function loadFromSheets(silent=false){
         return {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
       });
     // Aplica totais novos
-    D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); });
-    try { renderLanc(); } catch(re){ console.error('renderLanc erro:', re); }
-    try { buildAll(); } catch(be){ console.error('buildAll erro:', be); }
+    D.sess.forEach((l,i)=>{ 
+      try { if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); }
+      catch(e){ console.error('SESS erro idx '+i, l.mes, l.fra, e.message); }
+    });
+    try { renderLanc(); } catch(re){ console.error('renderLanc erro:', re.message, re.stack); }
+    try { buildAll(); } catch(be){ console.error('buildAll erro:', be.message, be.stack); }
     // Update API status indicator
     const lbl = document.getElementById('apiBtnLabel');
     const ico = document.getElementById('apiBtnIcon');
@@ -2927,7 +2930,10 @@ function exportWbsWord(){
 
 window.addEventListener('load',()=>{
   loadBudget();
-  HIST.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); });
+  HIST.forEach((l,i)=>{ 
+    try { if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); }
+    catch(e){ console.error('HIST erro idx '+i, l.mes, l.fra, e.message); }
+  });
   initAppLock();
   buildAll();
   renderLanc();
