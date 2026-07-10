@@ -327,7 +327,7 @@ footer strong{color:var(--ac)}
     <div><label>Valor Total (R$) <span style="color:#c62828">*</span></label>
       <input type="number" id="e-val" placeholder="0.00" step="0.01"></div>
     <div style="display:flex;align-items:flex-end;gap:.45rem;flex-wrap:wrap">
-      <button class="btn" onclick="addLanc()">&#10003; Lançar RN</button>
+      <button id="btnLancarRN" class="btn" onclick="addLanc()">&#10003; Lançar RN</button>
       <button class="btn btn2" onclick="resetSessao()">Resetar</button>
     </div>
   </div>
@@ -461,7 +461,7 @@ footer strong{color:var(--ac)}
       <div id="ev-val-hint" style="font-size:.65rem;color:var(--ac);margin-top:.2rem;display:none"></div>
     </div>
     <div style="display:flex;align-items:flex-end;gap:.45rem;flex-wrap:wrap">
-      <button class="btn" style="background:#185fa5" onclick="addEvento()">&#10003; Lançar Evento</button>
+      <button class="btn" style="background:#185fa5" id="btnLancarEVT" onclick="addEvento()">&#10003; Lançar Evento</button>
     </div>
   </div>
 
@@ -1799,6 +1799,20 @@ function addEvento(){
     _tipo_origem: 'evento', _id: null
   };
 
+  // Modo edição EVT
+  if(window._editMode && window._editType==='evt' && _editOldItem){
+    const old = _editOldItem;
+    if(old.fra && old.val) updateTotals(old.fra, old.cons, old.mes, old.val, old.status, -1);
+    const oldId = old.id || old._id;
+    if(oldId) _deletedIds.add(oldId);
+    const si = D.sess.findIndex(x=>x===old||x.id===oldId);
+    if(si>=0) D.sess.splice(si,1);
+    if(oldId) apiDelete(oldId).catch(e=>{});
+    window._editMode = false; window._editType = null;
+    _editSource = null; _editIdx = -1; _editOldItem = null;
+    const btn = document.getElementById('btnLancarEVT');
+    if(btn){ btn.textContent='✓ Lançar Evento'; btn.style.background=''; }
+  }
   D.sess.push(lanc);
   updateTotals(fra, cons, mes, val, status, +1);
 
@@ -1857,7 +1871,7 @@ function addLanc(){
     window._editMode = false;
     _editSource = null; _editIdx = -1; _editOldItem = null;
     // Restaurar botão
-    const btn = document.querySelector('#lancForm .btn');
+    const btn = document.getElementById('btnLancarRN');
     if(btn){ btn.textContent = '✓ Lançar RN'; btn.style.background=''; }
   }
   D.sess.push(lanc);
@@ -1887,44 +1901,66 @@ function openEditModal(source, idx){
   if(!l){ alert('Item não encontrado. Recarregue a página.'); return; }
   _editOldItem = {...l};
 
-  // Preencher form de Refeição de Negócios
-  const set = (id, v) => {
-    const el = document.getElementById(id);
-    if(el){ el.value = v || ''; }
-  };
-  set('e-ger',  l.ger   || 'Marlon Costa');
-  set('e-cons', l.cons);
-  set('e-ind',  l.ind);
-  set('e-fra',  l.fra);
-  set('e-tipo', l.tipo);
-  set('e-vrb',  l.verba || 'Verba Regional');
-  set('e-mes',  l.mes);
-  set('e-dat',  l.data);
-  set('e-val',  l.val);
-
-  // Ativar modo edição
-  window._editMode = true;
+  const isRN = !l._tipo_origem || l._tipo_origem==='rn' ||
+    ['Almoço','Jantar','Café','Refeição de Negócios (RN)'].includes(l.tipo);
 
   // Ir para aba Lançar Verba
   document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
   document.querySelectorAll('.nav > .nb').forEach(b => b.classList.remove('on'));
   const pg = document.getElementById('pg-lanc');
   if(pg) pg.classList.add('on');
-  // Marcar botão ativo
   document.querySelectorAll('.nav > .nb').forEach(b => {
     if(b.textContent.includes('Lançar')) b.classList.add('on');
   });
 
-  // Mudar botão para Salvar Edição
-  const btn = document.querySelector('button[onclick="addLanc()"]');
-  if(btn){ btn.textContent = '💾 Salvar Edição'; btn.style.background = '#ba7517'; }
+  const set = (id, v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
 
-  // Scroll até o form
-  setTimeout(() => {
-    const form = document.getElementById('lancForm');
-    if(form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    else window.scrollTo(0, 0);
-  }, 200);
+  if(isRN){
+    // Preencher form de Refeição de Negócios
+    set('e-ger',  l.ger || 'Marlon Costa');
+    set('e-cons', l.cons);
+    set('e-ind',  l.ind);
+    set('e-fra',  l.fra);
+    set('e-tipo', l.tipo);
+    set('e-vrb',  l.verba || 'Verba Regional');
+    set('e-mes',  l.mes);
+    set('e-dat',  l.data);
+    set('e-val',  l.val);
+    window._editMode = true;
+    window._editType = 'rn';
+    const btn = document.getElementById('btnLancarRN');
+    if(btn){ btn.textContent='💾 Salvar Edição'; btn.style.background='#ba7517'; }
+    setTimeout(()=>{
+      const form = document.getElementById('lancForm');
+      if(form) form.scrollIntoView({behavior:'smooth',block:'start'});
+    }, 200);
+  } else {
+    // Preencher form de Eventos e Apoios
+    set('ev-ger',  l.ger || 'Marlon Costa');
+    set('ev-cons', l.cons);
+    set('ev-ind',  l.ind);
+    set('ev-fra',  l.fra);
+    set('ev-tipo', l.tipo);
+    set('ev-tap',  l.tipoAp);
+    set('ev-soc',  l.soc);
+    set('ev-vrb',  l.verba || 'Verba Regional');
+    set('ev-sts',  l.status);
+    set('ev-mes',  l.mes);
+    set('ev-dat',  l.data);
+    set('ev-val',  l.val);
+    window._editMode = true;
+    window._editType = 'evt';
+    const btn = document.getElementById('btnLancarEVT');
+    if(btn){ btn.textContent='💾 Salvar Edição'; btn.style.background='#ba7517'; }
+    setTimeout(()=>{
+      const evForm = document.getElementById('evForm');
+      if(evForm) evForm.scrollIntoView({behavior:'smooth',block:'start'});
+      else {
+        const evSection = document.querySelector('[id*="ev-ger"]');
+        if(evSection) evSection.scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    }, 200);
+  }
 }
 function closeEditModal(){
   document.getElementById('editModal').style.display='none';
