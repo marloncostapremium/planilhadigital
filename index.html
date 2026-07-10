@@ -1882,34 +1882,47 @@ function openEditModal(source, idx){
   _editSource  = source;
   _editIdx     = idx;
   const l = source==='hist' ? HIST[idx] : D.sess[idx];
-  if(!l){ alert('Item não encontrado.'); return; }
+  if(!l){ alert('Item não encontrado. Recarregue a página.'); return; }
   _editOldItem = {...l};
 
-  const isRN = !l._tipo_origem || l._tipo_origem==='rn' ||
-    ['Almoço','Jantar','Café','Refeição de Negócios (RN)'].includes(l.tipo);
+  // Preencher form de Refeição de Negócios
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if(el){ el.value = v || ''; }
+  };
+  set('e-ger',  l.ger);
+  set('e-cons', l.cons);
+  set('e-ind',  l.ind);
+  set('e-fra',  l.fra);
+  set('e-tipo', l.tipo);
+  set('e-vrb',  l.verba);
+  set('e-mes',  l.mes);
+  set('e-dat',  l.data);
+  set('e-val',  l.val);
 
-  if(isRN){
-    const s = (id,v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
-    s('e-ger',l.ger); s('e-cons',l.cons); s('e-ind',l.ind);
-    s('e-fra',l.fra); s('e-tipo',l.tipo); s('e-vrb',l.verba);
-    s('e-mes',l.mes); s('e-dat',l.data); s('e-val',l.val);
-    window._editMode = true;
-    const btn = document.querySelector('#lancForm .btn');
-    if(btn){ btn.textContent='💾 Salvar Edição'; btn.style.background='#ba7517'; }
-    showPage('lanc', document.querySelector('.nb[onclick*=\'lanc\']'));
-    setTimeout(()=>{
-      const form = document.getElementById('lancForm');
-      if(form) form.scrollIntoView({behavior:'smooth',block:'start'});
-    }, 300);
-  } else {
-    const s = (id,v) => { const el=document.getElementById('em-'+id); if(el) el.value=v||''; };
-    s('ger',l.ger); s('cons',l.cons); s('ind',l.ind); s('fra',l.fra);
-    s('tipo',l.tipo); s('tap',l.tipoAp); s('soc',l.soc); s('vrb',l.verba);
-    s('sts',l.status); s('mes',l.mes); s('dat',l.data); s('val',l.val);
-    const modal = document.getElementById('editModal');
-    if(modal) modal.style.display='flex';
-    window.scrollTo(0,0);
-  }
+  // Ativar modo edição
+  window._editMode = true;
+
+  // Ir para aba Lançar Verba
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav > .nb').forEach(b => b.classList.remove('on'));
+  const pg = document.getElementById('pg-lanc');
+  if(pg) pg.classList.add('on');
+  // Marcar botão ativo
+  document.querySelectorAll('.nav > .nb').forEach(b => {
+    if(b.textContent.includes('Lançar')) b.classList.add('on');
+  });
+
+  // Mudar botão para Salvar Edição
+  const btn = document.querySelector('button[onclick="addLanc()"]');
+  if(btn){ btn.textContent = '💾 Salvar Edição'; btn.style.background = '#ba7517'; }
+
+  // Scroll até o form
+  setTimeout(() => {
+    const form = document.getElementById('lancForm');
+    if(form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else window.scrollTo(0, 0);
+  }, 200);
 }
 function closeEditModal(){
   document.getElementById('editModal').style.display='none';
