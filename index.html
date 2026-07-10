@@ -2267,7 +2267,7 @@ async function loadFromSheets(silent=false){
   const _url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
   if(!_url){ if(!silent) setBanner('⚠️ API não configurada.','#ba7517'); return; }
   API_URL = _url;
-  if(!silent) setBanner('🔄 Carregando dados do servidor...','#185fa5');
+  if(!silent) setBanner('🔄 Carregando dados...','#185fa5');
   try {
     const res  = await fetch(_url + '?action=getAll&sheet=Lan%C3%A7amentos_S2', { method:'GET', redirect:'follow' });
     const text = await res.text();
@@ -2277,34 +2277,30 @@ async function loadFromSheets(silent=false){
       return;
     }
     const rows = Array.isArray(json) ? json : (json.data || []);
-      // Em sync automático/silencioso: limpa IDs deletados localmente
-    // para refletir exclusões feitas diretamente no Google Sheets
     if(silent) _deletedIds.clear();
-    // Reverte totais anteriores
-    D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, -1); });
-    // Filtra e sanitiza — respeita exclusões locais desta sessão
-    D.sess = rows
-      .filter(l => l && l.cons && !_deletedIds.has(String(l.id||'')))
-      .map(l => {
-        // Normalize data field — ensure YYYY-MM-DD format
+    // Reverter totais anteriores com proteção
+    D.sess.forEach(l=>{ try{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, -1); }catch(e){} });
+    // Processar cada linha com proteção total
+    D.sess = [];
+    rows.forEach(l => {
+      try {
+        if(!l || !l.cons || _deletedIds.has(String(l.id||''))) return;
+        // Normalizar data
         let dataStr = String(l.data||'').trim();
-        // If date came as DD/MM/YYYY convert to YYYY-MM-DD
+        if(dataStr.length > 10 && (dataStr[10]==='T'||dataStr[10]===' ')) dataStr = dataStr.substring(0,10);
         if(dataStr.match(/^\d{2}\/\d{2}\/\d{4}$/)){
-          const [dd,mm,yy] = dataStr.split('/');
-          dataStr = yy+'-'+mm+'-'+dd;
+          const p = dataStr.split('/'); dataStr = p[2]+'-'+p[1]+'-'+p[0];
         }
-        // Remove time part if present (e.g. "2026-04-15 00:00:00" or "2026-04-15T00:00:00")
-        if(dataStr.length > 10 && (dataStr[10] === ' ' || dataStr[10] === 'T')) dataStr = dataStr.substring(0,10);
-        return {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
-      });
-    // Aplica totais novos
-    D.sess.forEach((l,i)=>{ 
-      try { if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); }
-      catch(e){ console.error('SESS erro idx '+i, l.mes, l.fra, e.message); }
+        const obj = {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
+        D.sess.push(obj);
+      } catch(e){ console.warn('Linha ignorada:', e.message); }
     });
-    try { renderLanc(); } catch(re){ console.error('renderLanc erro:', re.message, re.stack); }
-    try { buildAll(); } catch(be){ console.error('buildAll erro:', be.message, be.stack); }
-    // Update API status indicator
+    // Aplicar totais com proteção
+    D.sess.forEach(l=>{ try{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); }catch(e){} });
+    // Render com proteção
+    try{ renderLanc(); }catch(e){ console.warn('renderLanc:', e.message); }
+    try{ buildAll(); }catch(e){ console.warn('buildAll:', e.message); }
+    // Status online
     const lbl = document.getElementById('apiBtnLabel');
     const ico = document.getElementById('apiBtnIcon');
     if(lbl){ lbl.textContent='● online'; lbl.style.color='#1d9e75'; }
@@ -2318,14 +2314,11 @@ async function loadFromSheets(silent=false){
     const icoE = document.getElementById('apiBtnIcon');
     if(lblE){ lblE.textContent='● erro'; lblE.style.color='#c62828'; }
     if(icoE) icoE.setAttribute('stroke','#c62828');
-    if(!silent) setBanner('❌ Erro: ' + e.message,'#c62828');
-    console.error('loadFromSheets erro:', e);
+    if(!silent) setBanner('❌ Erro de conexão: ' + e.message,'#c62828');
   }
 }
 
-// Envia novo lançamento para o Google Sheets
-// ── API GOOGLE SHEETS ────────────────────────────────────────────────────────
-// Usa GET com parâmetros individuais — mais confiável com Apps Script + Safari
+
 async function gasRequest(params){
   const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
   if(!url) return null;
