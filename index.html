@@ -747,21 +747,6 @@ footer strong{color:var(--ac)}
     </div>
   </div>
 
-  <!-- LISTA DE VIAGENS -->
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin:1.2rem 0 .6rem">
-    <div class="stit" style="margin:0">Viagens Registradas</div>
-    <span id="vg-count" style="font-size:.72rem;color:var(--mu)"></span>
-  </div>
-  <div class="cc" style="overflow-x:auto;margin-bottom:1.5rem">
-    <table class="dt">
-      <thead><tr>
-        <th>Consultor</th><th>Gerente</th><th>Tipo</th><th>Ausência</th>
-        <th>IDA</th><th>Retorno</th><th>Dias</th><th>UF</th><th>Cidade</th><th>Obs</th><th>Ações</th>
-      </tr></thead>
-      <tbody id="vg-tbody"></tbody>
-    </table>
-  </div>
-
   <!-- BLOCO 2: CALENDÁRIO -->
   <div class="stit">Calendário de Viagens</div>
   <div class="cc" style="padding:1rem">
@@ -3024,47 +3009,50 @@ async function loadViagensFromSheets(){
   try {
     const res = await fetch(url + '?action=getAllViagens', {method:'GET', redirect:'follow'});
     const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); } catch(e){ console.error('Viagens JSON parse error:', text.substring(0,200)); return; }
+    let parsed;
+    try { parsed = JSON.parse(text); } catch(e){ return; }
     
-    // Aceitar tanto {status:'ok', data:[...]} quanto array direto
-    let serverData = [];
-    if(Array.isArray(json)) {
-      serverData = json;
-    } else if(json && Array.isArray(json.data)) {
-      serverData = json.data;
-    }
+    // Extrair array de dados
+    const arr = Array.isArray(parsed) ? parsed : 
+                (parsed && Array.isArray(parsed.data) ? parsed.data : []);
     
-    if(serverData.length > 0){
-      // Normalizar datas — remover T e hora
-      serverData = serverData.map(v => ({
-        ...v,
-        ida: v.ida ? String(v.ida).substring(0,10).replace('T','') : '',
-        ret: v.ret ? String(v.ret).substring(0,10).replace('T','') : '',
-        cons: v.cons || v.Consultor || '',
-        cidade: v.cidade || v.Cidade || '',
-        uf: v.uf || v.UF || '',
-        tipo: v.tipo || v.tipo_viagem || 'Visitação Médica',
-        dias: parseInt(v.dias) || 0
-      }));
-      
-      // Merge: manter locais não enviados ainda
-      const serverIds = new Set(serverData.map(v => String(v.id)));
-      const localOnly = VIAGENS.filter(v => !serverIds.has(String(v.id)));
-      VIAGENS = [...serverData, ...localOnly];
-      localStorage.setItem('planilha-digital_viagens', JSON.stringify(VIAGENS));
-      console.log('Viagens carregadas:', VIAGENS.length);
-    }
+    if(arr.length === 0) { renderViagemTabela(); renderViagemCal(); return; }
     
-    // Sempre renderizar após carregar
-    try{ renderViagemCal(); }catch(e){ console.error('renderViagemCal:', e); }
-    try{ renderViagemTabela(); }catch(e){ console.error('renderViagemTabela:', e); }
-    try{ renderViagemResumo(); }catch(e){}
+    // Normalizar cada viagem — garantir todos os campos necessários
+    const normalized = arr.map(v => {
+      // Suporte a qualquer variação de nome de campo
+      const getField = (...keys) => { for(const k of keys){ if(v[k] !== undefined && v[k] !== null && v[k] !== '') return String(v[k]); } return ''; };
+      const normDate = d => { if(!d) return ''; return String(d).replace('T',' ').substring(0,10); };
+      return {
+        id:       getField('id','ID'),
+        cons:     getField('cons','Consultor','CONSULTOR'),
+        ger:      getField('ger','Gerente','GERENTE'),
+        ida:      normDate(getField('ida','IDA','Ida')),
+        ret:      normDate(getField('ret','Retorno','RETORNO')),
+        dias:     parseInt(getField('dias','Dias','DIAS')) || 0,
+        uf:       getField('uf','UF'),
+        cidade:   getField('cidade','Cidade','CIDADE'),
+        tipo:     getField('tipo','Tipo Viagem','tipo_viagem','TIPO') || 'Visitação Médica',
+        ausencia: getField('ausencia','Ausência','Ausencia','AUSENCIA'),
+        obs:      getField('obs','Obs','OBS','Observações')
+      };
+    });
     
-  } catch(e){
-    console.error('loadViagensFromSheets error:', e);
-  }
+    // Merge com viagens locais não enviadas ainda
+    const serverIds = new Set(normalized.map(v => v.id));
+    const localOnly = VIAGENS.filter(v => !serverIds.has(String(v.id)));
+    VIAGENS = [...normalized, ...localOnly];
+    localStorage.setItem('planilha-digital_viagens', JSON.stringify(VIAGENS));
+    
+  } catch(e){ console.error('loadViagensFromSheets:', e); }
+  
+  // Sempre renderizar
+  try{ renderViagemTabela(); }catch(e){}
+  try{ renderViagemCal(); }catch(e){}
+  try{ renderViagemResumo(); }catch(e){}
 }
+
+// Initialize
 
 // Initialize
 
