@@ -773,7 +773,63 @@ footer strong{color:var(--ac)}
   </div>
 
   <!-- LISTA RESUMIDA DE VIAGENS -->
-  <div class="stit" style="margin-top:1.5rem">Registros de Viagens</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">
+    <div class="stit" style="margin:0">Registros de Viagens</div>
+    <button onclick="toggleFiltrosViagem()" id="btn-filtros-viag"
+      style="background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.35);color:#a78bfa;
+             border-radius:8px;padding:.35rem .9rem;font-size:.78rem;cursor:pointer;
+             display:flex;align-items:center;gap:.4rem;font-weight:600">
+      ⚙ Filtros
+    </button>
+  </div>
+
+  <!-- Painel de filtros -->
+  <div id="viag-filtros-panel" style="display:none;background:rgba(10,20,50,.6);border:1px solid rgba(124,58,237,.25);
+       border-radius:10px;padding:14px 16px;margin-bottom:10px">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+      <div>
+        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Consultor</div>
+        <select id="filt-viag-cons" onchange="filtrarViagemTabela()"
+          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
+                 border-radius:6px;padding:6px 10px;font-size:.78rem;min-width:130px">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Cidade</div>
+        <select id="filt-viag-cidade" onchange="filtrarViagemTabela()"
+          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
+                 border-radius:6px;padding:6px 10px;font-size:.78rem;min-width:130px">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">UF</div>
+        <select id="filt-viag-uf" onchange="filtrarViagemTabela()"
+          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
+                 border-radius:6px;padding:6px 10px;font-size:.78rem;min-width:80px">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Data Ida (de)</div>
+        <input type="date" id="filt-viag-ida" onchange="filtrarViagemTabela()"
+          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
+                 border-radius:6px;padding:6px 10px;font-size:.78rem">
+      </div>
+      <div>
+        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Data Retorno (até)</div>
+        <input type="date" id="filt-viag-ret" onchange="filtrarViagemTabela()"
+          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
+                 border-radius:6px;padding:6px 10px;font-size:.78rem">
+      </div>
+      <button onclick="limparFiltrosViagem()"
+        style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171;
+               border-radius:6px;padding:6px 14px;font-size:.75rem;cursor:pointer;font-weight:600;
+               align-self:flex-end">✕ Limpar</button>
+    </div>
+  </div>
+
   <div class="cc" style="overflow-x:auto">
     <table class="dt" id="vg-resumo">
       <thead><tr>
@@ -2887,7 +2943,19 @@ function renderViagemCal(){
   const dias = new Date(ano, mes+1, 0).getDate();
   const ini  = new Date(ano, mes, 1).getDay(); // day of week of 1st
 
-  // Build map: dateStr -> [consultor (cidade), ...]
+  // PT day abbreviations (Dom=0 ... Sáb=6)
+  const DIAS_SEM_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+  // Unique colors per consultant
+  const CONS_CAL_COLORS = {
+    'Angélica Silva':'#10b981','Elaíne Azevedo':'#3b82f6','Silvia Cunha':'#f59e0b',
+    'Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899',
+    'Cassandra Andrade':'#06b6d4','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16',
+    'Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e',
+    'Saulo Guedes':'#8b5cf6','Regional':'#64748b'
+  };
+
+  // Build map: day -> [{cons, uf, cidade}]
   const dayMap = {};
   VIAGENS.forEach(v => {
     if(!v.ida || !v.ret) return;
@@ -2897,47 +2965,48 @@ function renderViagemCal(){
       if(cur.getFullYear()===ano && cur.getMonth()===mes){
         const day = cur.getDate();
         if(!dayMap[day]) dayMap[day] = [];
-        const firstName = v.cons.split(' ')[0];
-      const cityLine = v.cidade ? v.cidade + ' ' + (v.uf ? '· '+v.uf : '') : (v.uf || '');
-      const label = firstName + (cityLine ? '|' + cityLine : '');
-        dayMap[day].push({ label, cons: v.cons });
+        dayMap[day].push({ cons: v.cons, uf: v.uf||'', cidade: v.cidade||'' });
       }
     }
   });
-
-  // Unique colors per consultant
-  const CONS_CAL_COLORS = {'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Silvia Cunha':'#f59e0b','Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899','Cassandra Andrade':'#0891b2','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16','Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e','Saulo Guedes':'#8b5cf6','Regional':'#6b7280'};
 
   let out = '';
 
   // Empty cells before 1st
   for(let i = 0; i < ini; i++){
-    out += '<div style="min-height:70px"></div>';
+    out += '<div style="min-height:78px"></div>';
   }
 
+  const today = new Date();
+
   for(let d = 1; d <= dias; d++){
-    const fds    = [0,6].includes(new Date(ano, mes, d).getDay());
+    const dtObj  = new Date(ano, mes, d);
+    const diaSem = DIAS_SEM_PT[dtObj.getDay()];
+    const isFds  = [0,6].includes(dtObj.getDay());
     const events = dayMap[d] || [];
     const hasBg  = events.length > 0;
-    const bg     = hasBg ? 'var(--sf)' : fds ? 'var(--sf2)' : 'var(--sf2)';
-    const bc     = hasBg ? '#1d9e7544' : 'var(--bd)';
-    const today  = new Date();
     const isToday= today.getDate()===d && today.getMonth()===mes && today.getFullYear()===ano;
+    const bc     = isToday ? '#7c3aed' : hasBg ? 'rgba(255,255,255,.12)' : 'var(--bd)';
+    const bg     = isToday ? 'rgba(124,58,237,.12)' : hasBg ? 'var(--sf)' : 'var(--sf2)';
 
     const evHtml = events.slice(0,3).map(e => {
-      const c = CONS_CAL_COLORS[e.cons] || '#8890b0';
-      const parts = e.label.split('|');
-      const namePart = parts[0] || e.label;
-      const cityPart = parts[1] || '';
-      return '<div style="background:'+c+'15;border-left:2px solid '+c+';border-radius:0 3px 3px 0;padding:.1rem .25rem;margin-bottom:.15rem;overflow:hidden" title="'+e.label+'">'
-        + '<div style="font-size:.6rem;color:'+c+';font-weight:700;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">'+namePart+'</div>'
-        + (cityPart ? '<div style="font-size:.52rem;color:'+c+';opacity:.75;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">'+cityPart+'</div>' : '')
-        + '</div>';
-    }).join('') + (events.length > 3 ? '<div style="font-size:.55rem;color:var(--mu)">+' + (events.length-3) + ' mais</div>' : '');
+      const c    = CONS_CAL_COLORS[e.cons] || '#8890b0';
+      const nome = (e.cons||'').split(' ')[0];
+      const loc  = e.uf ? ' · ' + e.uf : '';
+      return `<div style="background:${c}18;border-left:2px solid ${c};border-radius:0 3px 3px 0;
+                   padding:.12rem .28rem;margin-bottom:.15rem;overflow:hidden" title="${e.cons} — ${e.cidade||e.uf||''}">
+        <div style="font-size:.6rem;color:${c};font-weight:700;white-space:nowrap;
+                    text-overflow:ellipsis;overflow:hidden">${nome}${loc}</div>
+      </div>`;
+    }).join('') + (events.length > 3 ? `<div style="font-size:.55rem;color:var(--mu);padding:.1rem .25rem">+${events.length-3} mais</div>` : '');
 
-    out += `<div style="background:${bg};border:1px solid ${isToday?'#1d9e75':bc};border-radius:5px;padding:.3rem .35rem;min-height:70px;cursor:${hasBg?'pointer':'default'}"
-      onclick="${hasBg?`vgDayDetail(${d})`:''}">
-      <div style="font-size:.72rem;font-weight:700;color:${isToday?'#1d9e75':fds?'var(--mu)':'var(--wh)'};margin-bottom:.2rem">${d}${isToday?' ●':''}</div>
+    out += `<div style="background:${bg};border:1px solid ${bc};border-radius:6px;
+                 padding:.3rem .35rem;min-height:78px;cursor:${hasBg?'pointer':'default'}"
+              onclick="${hasBg?`vgDayDetail(${d})`:''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
+        <span style="font-size:.72rem;font-weight:700;color:${isToday?'#7c3aed':isFds?'var(--mu)':'var(--wh)'}">${d}</span>
+        <span style="font-size:.58rem;color:${isToday?'#a78bfa':'#475569'};font-weight:600">${diaSem}</span>
+      </div>
       ${evHtml}
     </div>`;
   }
@@ -2955,28 +3024,110 @@ function renderViagemResumo(){
   }
   const MESES_V2 = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const fmt = d => d ? d.split('-').reverse().join('/') : '—';
+  // Format date as "Qui Ago 06" using PT abbreviations
+  const DIAS_SEM_R = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const MESES_ABR  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const fmtPT = d => {
+    if(!d) return '—';
+    const [a,m,dd] = d.split('-').map(Number);
+    const dt = new Date(a, m-1, dd);
+    return `${DIAS_SEM_R[dt.getDay()]} ${MESES_ABR[m-1]} ${String(dd).padStart(2,'0')}`;
+  };
   const getMes = ida => {
     if(!ida) return '—';
     const m = parseInt(ida.split('-')[1])-1;
     return MESES_V2[m] || '—';
   };
+  const CONS_C2 = {
+    'Angélica Silva':'#10b981','Elaíne Azevedo':'#3b82f6','Silvia Cunha':'#f59e0b',
+    'Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899',
+    'Cassandra Andrade':'#06b6d4','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16',
+    'Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e',
+    'Saulo Guedes':'#8b5cf6','Regional':'#64748b'
+  };
+
   // Sort by IDA date
   const sorted = [...VIAGENS].sort((a,b)=>(a.ida||'').localeCompare(b.ida||''));
-  const CONS_C2 = {'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Silvia Cunha':'#f59e0b','Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899','Cassandra Andrade':'#0891b2','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16','Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e','Saulo Guedes':'#8b5cf6','Regional':'#6b7280'};
-  tb.innerHTML = sorted.map(v => {
+
+  // Populate filter dropdowns with available values
+  _popularFiltrosViagem(sorted);
+
+  // Apply active filters if any
+  const vFiltradas = _getViagensFiltradas(sorted);
+
+  tb.innerHTML = vFiltradas.map(v => {
     const c = CONS_C2[v.cons] || '#8890b0';
+    const firstName = (v.cons||'').split(' ')[0];
     return `<tr>
-      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};margin-right:.4rem"></span><b>${v.cons}</b></td>
-      <td style="color:var(--mu)">${v.cidade||v.uf||'—'}</td>
-      <td style="white-space:nowrap">${fmt(v.ida)}</td>
-      <td style="white-space:nowrap">${fmt(v.ret)}</td>
+      <td><span style="display:inline-flex;align-items:center;gap:.4rem">
+        <span style="width:8px;height:8px;border-radius:50%;background:${c};flex-shrink:0"></span>
+        <b>${firstName}</b>
+      </span></td>
+      <td style="color:var(--mu)">${v.cidade||'—'}</td>
+      <td style="white-space:nowrap;font-size:.78rem">${fmtPT(v.ida)}</td>
+      <td style="white-space:nowrap;font-size:.78rem">${fmtPT(v.ret)}</td>
       <td style="text-align:center;font-weight:700;color:var(--ac)">${v.dias||'—'}</td>
       <td>${getMes(v.ida)}</td>
       <td style="font-size:.72rem;color:var(--mu)">${v.tipo||v.ausencia||'—'}</td>
     </tr>`;
   }).join('');
 }
+
+// ── FILTROS VIAGENS ───────────────────────────────────────────────────────────
+function toggleFiltrosViagem(){
+  const p = document.getElementById('viag-filtros-panel');
+  const b = document.getElementById('btn-filtros-viag');
+  if(!p) return;
+  const open = p.style.display === 'none' || !p.style.display;
+  p.style.display = open ? 'block' : 'none';
+  if(b) b.style.background = open ? 'rgba(124,58,237,.3)' : 'rgba(124,58,237,.15)';
+}
+
+function _popularFiltrosViagem(dados){
+  const sel = (id, arr) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const cur = el.value;
+    el.innerHTML = `<option value="">Todos</option>` +
+      arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+    if(cur) el.value = cur;
+  };
+  const uniq = (arr, fn) => [...new Set(arr.map(fn).filter(Boolean))].sort();
+  sel('filt-viag-cons',   uniq(dados, v => v.cons));
+  sel('filt-viag-cidade', uniq(dados, v => v.cidade));
+  sel('filt-viag-uf',     uniq(dados, v => v.uf));
+}
+
+function _getViagensFiltradas(dados){
+  const cons   = document.getElementById('filt-viag-cons')?.value   || '';
+  const cidade = document.getElementById('filt-viag-cidade')?.value || '';
+  const uf     = document.getElementById('filt-viag-uf')?.value     || '';
+  const idaDe  = document.getElementById('filt-viag-ida')?.value    || '';
+  const retAte = document.getElementById('filt-viag-ret')?.value    || '';
+  return dados.filter(v => {
+    if(cons   && (v.cons||'')   !== cons)   return false;
+    if(cidade && (v.cidade||'') !== cidade) return false;
+    if(uf     && (v.uf||'')     !== uf)     return false;
+    if(idaDe  && (v.ida||'')    <  idaDe)   return false;
+    if(retAte && (v.ret||'')    >  retAte)  return false;
+    return true;
+  });
+}
+
+function filtrarViagemTabela(){ renderViagemResumo(); }
+
+function limparFiltrosViagem(){
+  ['filt-viag-cons','filt-viag-cidade','filt-viag-uf'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  ['filt-viag-ida','filt-viag-ret'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  renderViagemResumo();
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function vgDayDetail(d){var ano=_vgCalAno,mes=_vgCalMes;var pad=function(n){return String(n).padStart(2,'0');};var dateStr=ano+'-'+pad(mes+1)+'-'+pad(d);var viagens=VIAGENS.filter(function(v){return v.ida<=dateStr&&v.ret>=dateStr;});if(!viagens.length)return;var fmtD=function(s){return s?s.split('-').reverse().join('/'):'--';};var info=viagens.map(function(v){return '- '+v.cons+'\n  Gerente: '+v.ger+' | IDA: '+fmtD(v.ida)+' | Retorno: '+fmtD(v.ret)+' | '+v.dias+' dia(s)'+(v.cidade?' | '+v.uf+' - '+v.cidade:'| '+v.uf)+(v.obs?' | Obs: '+v.obs:'');}).join('\n\n');alert('Viagens em '+pad(d)+'/'+pad(mes+1)+'/'+ano+':\n\n'+info);}
 
