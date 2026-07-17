@@ -3022,30 +3022,51 @@ async function loadViagensFromSheets(){
   const url = localStorage.getItem('planilha-digital_api_url') || _DEFAULT_API;
   if(!url) return;
   try {
-    setBanner('🔄 Carregando viagens...','#185fa5');
-    const res  = await fetch(url+'?action=getAllViagens', {method:'GET', redirect:'follow'});
+    const res = await fetch(url + '?action=getAllViagens', {method:'GET', redirect:'follow'});
     const text = await res.text();
-    let json; try{ json=JSON.parse(text); }catch(e){ return; }
-    if(json && json.status==='ok' && Array.isArray(json.data) && json.data.length > 0){
-      // Merge: keep local viagens not yet on server + server viagens
-      const serverIds = new Set(json.data.map(v=>v.id));
-      const localOnly = VIAGENS.filter(v => !serverIds.has(v.id));
-      VIAGENS = [...json.data, ...localOnly];
-      localStorage.setItem('planilha-digital_viagens', JSON.stringify(VIAGENS));
-      setBanner('✅ '+VIAGENS.length+' viagem(ns) carregada(s).','#1d9e75');
-      // Renderizar calendário e tabela com dados do Sheets
-      try{ renderViagemCal(); }catch(e){}
-      try{ renderViagemTabela(); }catch(e){}
-      try{ renderViagemResumo(); }catch(e){}
-    } else {
-      setBanner('','#1d9e75');
+    let json;
+    try { json = JSON.parse(text); } catch(e){ console.error('Viagens JSON parse error:', text.substring(0,200)); return; }
+    
+    // Aceitar tanto {status:'ok', data:[...]} quanto array direto
+    let serverData = [];
+    if(Array.isArray(json)) {
+      serverData = json;
+    } else if(json && Array.isArray(json.data)) {
+      serverData = json.data;
     }
-    renderViagemTabela();
-    renderViagemCal();
+    
+    if(serverData.length > 0){
+      // Normalizar datas — remover T e hora
+      serverData = serverData.map(v => ({
+        ...v,
+        ida: v.ida ? String(v.ida).substring(0,10).replace('T','') : '',
+        ret: v.ret ? String(v.ret).substring(0,10).replace('T','') : '',
+        cons: v.cons || v.Consultor || '',
+        cidade: v.cidade || v.Cidade || '',
+        uf: v.uf || v.UF || '',
+        tipo: v.tipo || v.tipo_viagem || 'Visitação Médica',
+        dias: parseInt(v.dias) || 0
+      }));
+      
+      // Merge: manter locais não enviados ainda
+      const serverIds = new Set(serverData.map(v => String(v.id)));
+      const localOnly = VIAGENS.filter(v => !serverIds.has(String(v.id)));
+      VIAGENS = [...serverData, ...localOnly];
+      localStorage.setItem('planilha-digital_viagens', JSON.stringify(VIAGENS));
+      console.log('Viagens carregadas:', VIAGENS.length);
+    }
+    
+    // Sempre renderizar após carregar
+    try{ renderViagemCal(); }catch(e){ console.error('renderViagemCal:', e); }
+    try{ renderViagemTabela(); }catch(e){ console.error('renderViagemTabela:', e); }
+    try{ renderViagemResumo(); }catch(e){}
+    
   } catch(e){
     console.error('loadViagensFromSheets error:', e);
   }
 }
+
+// Initialize
 
 // Initialize viagem page when opened
 function initViagPage(){
