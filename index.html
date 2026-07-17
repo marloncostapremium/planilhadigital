@@ -2263,6 +2263,15 @@ function showPage(id,btn){
     document.querySelectorAll('.vnb').forEach(b=>b.classList.remove('on'));
     const vb=document.getElementById('vtab-reg'); if(vb) vb.classList.add('on');
   }
+  if(id==='viag'){
+    loadViagensFromSheets().then(()=>{
+      try{renderViagemCal();}catch(e){}
+      try{renderViagemTabela();}catch(e){}
+      try{renderViagemResumo();}catch(e){}
+    }).catch(()=>{
+      try{renderViagemCal();}catch(e){}
+    });
+  }
   setTimeout(buildAll,60);
 }
 
@@ -3107,11 +3116,13 @@ window.addEventListener('load',()=>{
   });
   // Carrega dados do Sheets ao abrir
   loadFromSheets();
+  loadViagensFromSheets(); // Carregar viagens do Sheets no início
 
   // ── SINCRONIZAÇÃO AUTOMÁTICA ──────────────────────────────────────────────
   // Recarrega dados do Sheets a cada 3 minutos
   setInterval(()=>{
     loadFromSheets(true); // true = silent (sem banner)
+    loadViagensFromSheets(); // sync viagens
   }, 3 * 60 * 1000);
 
   // Recarrega quando o usuário volta para a aba/app
