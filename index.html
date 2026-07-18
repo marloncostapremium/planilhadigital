@@ -2797,8 +2797,9 @@ function calcDiasViag(){
     diasEl.value = '';
     return;
   }
-  const diff = Math.round((d2 - d1) / (1000*60*60*24)) + 1;
-  diasEl.value = diff;
+  // Diferença simples entre os numerais dos dias (ex: 8-6=2)
+  const diff = d2.getDate() - d1.getDate();
+  diasEl.value = diff > 0 ? diff : Math.round((d2 - d1) / (1000*60*60*24));
 }
 
 function limparFormViag(){
@@ -2835,9 +2836,10 @@ function salvarViagem(){
   if(!uf)  { showError('Selecione a UF.'); return; }
   if(uf && !cid){ showError('Selecione a Cidade — campo obrigatório.'); return; }
 
+  const _idaMes = ida ? ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][parseInt(ida.split('-')[1])-1] || '' : '';
   const viagem = {
     id: 'V' + Date.now(),
-    cons, ger, ida, ret, dias, uf, cidade: cid, obs, tipo, ausencia
+    cons, ger, ida, ret, dias, uf, cidade: cid, obs, tipo, ausencia, mes: _idaMes
   };
 
   VIAGENS.push(viagem);
@@ -3004,7 +3006,7 @@ function renderViagemCal(){
     const evHtml = events.slice(0,3).map(e => {
       const c    = CONS_CAL_COLORS[e.cons] || '#8890b0';
       const nome = (e.cons||'').split(' ')[0];
-      const loc  = e.uf ? ' · ' + e.uf : '';
+      const loc  = e.cidade ? ' · ' + e.cidade : (e.uf ? ' · ' + e.uf : '');
       return `<div style="background:${c}18;border-left:2px solid ${c};border-radius:0 3px 3px 0;
                    padding:.12rem .28rem;margin-bottom:.15rem;overflow:hidden" title="${e.cons} — ${e.cidade||e.uf||''}">
         <div style="font-size:.6rem;color:${c};font-weight:700;white-space:nowrap;
@@ -3042,6 +3044,8 @@ function renderViagemResumo(){
   const fmtPT = d => {
     if(!d || d === '\u2014') return '\u2014';
     const s = String(d).trim();
+    // Já está no formato "Seg 13" — retorna direto
+    if(s.match(/^[A-ZÁa-záéíóú][a-záéíóú]{1,2}\s\d{2}$/)) return s;
     let dt;
     const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if(m1){ dt = new Date(+m1[1], +m1[2]-1, +m1[3]); }
@@ -3054,10 +3058,11 @@ function renderViagemResumo(){
     const dia = String(dt.getDate()).padStart(2,'0');
     return DIAS_SEM_R[dt.getDay()] + ' ' + dia;
   };
-  const getMes = ida => {
+  const getMes = (ida, mes) => {
+    if(mes) return mes;
     if(!ida) return '—';
-    const m = parseInt(ida.split('-')[1])-1;
-    return MESES_V2[m] || '—';
+    const mi = parseInt((ida||'').split('-')[1])-1;
+    return MESES_V2[mi] || '—';
   };
   const CONS_C2 = {
     'Angélica Silva':'#10b981','Elaíne Azevedo':'#3b82f6','Silvia Cunha':'#f59e0b',
@@ -3088,7 +3093,7 @@ function renderViagemResumo(){
       <td style="white-space:nowrap;font-size:.78rem">${fmtPT(v.ida)}</td>
       <td style="white-space:nowrap;font-size:.78rem">${fmtPT(v.ret)}</td>
       <td style="text-align:center;font-weight:700;color:var(--ac)">${v.dias||'—'}</td>
-      <td>${getMes(v.ida)}</td>
+      <td>${getMes(v.ida, v.mes)}</td>
       <td style="font-size:.72rem;color:var(--mu)">${v.tipo||v.ausencia||'—'}</td>
     </tr>`;
   }).join('');
@@ -3160,7 +3165,7 @@ async function apiAddViagem(v){
     const params = {
       action:'addViagem', id:v.id, cons:v.cons, ger:v.ger,
       ida:v.ida, ret:v.ret, dias:v.dias, uf:v.uf,
-      cidade:v.cidade||'', tipo:v.tipo||'', ausencia:v.ausencia||'', obs:v.obs||''
+      cidade:v.cidade||'', tipo:v.tipo||'', ausencia:v.ausencia||'', obs:v.obs||'', mes:v.mes||''
     };
     const qs = Object.entries(params).map(([k,v2])=>k+'='+encodeURIComponent(String(v2||''))).join('&');
     await fetch(url+'?'+qs, {method:'GET', redirect:'follow'});
@@ -3203,7 +3208,8 @@ async function loadViagensFromSheets(){
         // DD/MM/YYYY
         const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
         if(m2) return `${m2[3]}-${m2[2]}-${m2[1]}`;
-        return s.substring(0,10);
+        // Formato "Seg 13" ou "Qui 06" — retorna como está (já formatado)
+        return s;
       };
       return {
         id:       getField('id','ID'),
@@ -3216,7 +3222,17 @@ async function loadViagensFromSheets(){
         cidade:   getField('cidade','Cidade','CIDADE'),
         tipo:     getField('tipo','Tipo Viagem','tipo_viagem','TIPO') || 'Visitação Médica',
         ausencia: getField('ausencia','Ausência','Ausencia','AUSENCIA'),
-        obs:      getField('obs','Obs','OBS','Observações')
+        obs:      getField('obs','Obs','OBS','Observações'),
+        mes:      (() => {
+          const m = getField('mes','Mês','MES','Mes');
+          if(m) return m;
+          // calcular do campo ida se não vier do Sheets
+          const idaStr = normDate(getField('ida','IDA','Ida'));
+          if(!idaStr) return '';
+          const mi = parseInt(idaStr.split('-')[1])-1;
+          return ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
+                  'Agosto','Setembro','Outubro','Novembro','Dezembro'][mi] || '';
+        })()
       };
     });
     
