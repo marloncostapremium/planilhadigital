@@ -130,9 +130,9 @@ footer strong{color:var(--ac)}
     <div id="pwStep">
       <input type="password" id="globalPwInput" placeholder="Digite a senha..."
         style="width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:.65rem 1rem;color:var(--wh);font-size:.95rem;outline:none;margin-bottom:.7rem;text-align:center;letter-spacing:.08em"
-        onkeydown="if(event.key==='Enter') checkGlobalPassword()">
+        onkeydown="if(event.key==='Enter'){ event.preventDefault(); checkGlobalPassword(); }">
       <div id="globalPwError" style="font-size:.73rem;color:#f43f5e;margin-bottom:.6rem;display:none">✕ Senha incorreta. Tente novamente.</div>
-      <button class="btn" onclick="checkGlobalPassword()" style="width:100%;padding:.6rem;font-size:.9rem;margin-bottom:.6rem">🔓 Acessar</button>
+      <button class="btn" type="button" onclick="checkGlobalPassword()" style="width:100%;padding:.6rem;font-size:.9rem;margin-bottom:.6rem">🔓 Acessar</button>
       <button id="bioBtnAlt" onclick="triggerBiometric()" style="display:none;width:100%;padding:.55rem;font-size:.85rem;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer">
         👆 Usar Biometria
       </button>
@@ -918,26 +918,19 @@ function showGlobalPwModal(){
   setTimeout(()=>{ const i=document.getElementById('globalPwInput'); if(i) i.focus(); }, 120);
 }
 
-async function checkGlobalPassword(){
-  const pw  = document.getElementById('globalPwInput').value;
-  const err = document.getElementById('globalPwError');
+function checkGlobalPassword(){
+  const input = document.getElementById('globalPwInput');
+  const err   = document.getElementById('globalPwError');
+  const pw    = input.value.trim();
   if(pw === APP_PW){
     localStorage.setItem(APP_KEY, '1');
-    document.getElementById('globalPwInput').value = '';
-    // Tentar registrar biometria se disponível
-    if(isBioAvailable() && !isBioEnrolled()){
-      const enrolled = await enrollBiometric();
-      if(enrolled){
-        document.getElementById('pwModalMsg').textContent = '✅ Biometria ativada! Na próxima vez use Face ID ou digital.';
-        await new Promise(r=>setTimeout(r,2000));
-      }
-    }
+    input.value = '';
     document.getElementById('globalPwModal').style.display = 'none';
     unlockApp();
   } else {
     err.style.display = 'block';
-    document.getElementById('globalPwInput').value = '';
-    document.getElementById('globalPwInput').focus();
+    input.value = '';
+    input.focus();
     setTimeout(()=>{ err.style.display='none'; }, 3000);
   }
 }
@@ -977,11 +970,15 @@ function initAppLock(){
     unlockApp();
   } else {
     lockApp();
-    // Show modal automatically
     setTimeout(()=>{
-      document.getElementById('globalPwModal').style.display='flex';
-      setTimeout(()=>{const i=document.getElementById('globalPwInput');if(i)i.focus();},120);
-    }, 400);
+      const m = document.getElementById('globalPwModal');
+      if(m) m.style.display='flex';
+      showPwStep();
+      setTimeout(()=>{
+        const i=document.getElementById('globalPwInput');
+        if(i){ i.focus(); i.value=''; }
+      },150);
+    }, 300);
   }
 }
 
