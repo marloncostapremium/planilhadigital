@@ -2538,7 +2538,7 @@ async function loadFromSheets(silent=false){
 }
 
 
-async function gasRequest(params){
+async async function gasRequest(params){
   const url = localStorage.getItem('planilha-digital_api_url') || _DEFAULT_API;
   if(!url) return null;
   try {
@@ -2562,7 +2562,6 @@ async function apiAdd(lancamento){
 
   const params = {
     action:'add',
-    sheet:'Lançamentos_S2',
     ger:    lancamento.ger    ||'',
     cons:   lancamento.cons   ||'',
     ind:    lancamento.ind    ||'',
@@ -2591,12 +2590,24 @@ async function apiAdd(lancamento){
     const text = await res.text();
     let json;
     try { json = JSON.parse(text); } catch(e) {}
-    if(json && json.status === 'ok'){
+    if(json && (json.status === 'ok' || json.status === 'ok' || json.id)){
       setBanner('✅ Salvo no Google Sheets!','#1d9e75');
       setTimeout(()=>setBanner('',''), 3000);
       return json.id || localId;
+    } else if(json && json.status === 'error'){
+      setBanner('❌ Erro GAS: ' + (json.message||''),'#c62828');
+      console.error('GAS error:', json);
+      return localId;
     } else {
-      setBanner('⚠️ Resposta inesperada do servidor.','#ba7517');
+      // Se chegou resposta mas não reconhecemos — pode ser redirect do Google
+      // Considerar sucesso se tiver resposta HTTP 200
+      if(res.ok){
+        setBanner('✅ Enviado!','#1d9e75');
+        setTimeout(()=>setBanner('',''), 3000);
+        return localId;
+      }
+      setBanner('⚠️ Resposta inesperada: ' + text.substring(0,60),'#ba7517');
+      console.warn('Unexpected response:', text.substring(0,200));
       return localId;
     }
   } catch(err){
