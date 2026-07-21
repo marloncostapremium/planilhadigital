@@ -120,7 +120,7 @@ footer strong{color:var(--ac)}
 </div>
 
 <!-- GLOBAL PASSWORD MODAL -->
-<div id="globalPwModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000cc;z-index:99999;align-items:center;justify-content:center;padding:1rem">
+<div id="globalPwModal" style="display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000ee;z-index:99999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:2rem 1.8rem;max-width:340px;width:100%;text-align:center;box-shadow:0 8px 40px #0008">
     <div style="font-size:2rem;margin-bottom:.5rem">🔐</div>
     <div style="font-size:1.2rem;font-weight:800;color:var(--wh);margin-bottom:.3rem;letter-spacing:.04em">Planilha <span style="color:var(--ac)">Digital</span></div>
@@ -903,7 +903,7 @@ function mk(id,type,data,opt){
 }
 
 // ── SENHA GLOBAL DO APP ───────────────────────────────────────────────────────
-const APP_PW  = 'Rino2026!Resp#';
+const APP_PW  = 'Marlon2026';
 const APP_KEY = 'planilha-digital_app_auth_v8';
 
 function isAppUnlocked(){
@@ -921,17 +921,18 @@ function showGlobalPwModal(){
 function checkGlobalPassword(){
   const input = document.getElementById('globalPwInput');
   const err   = document.getElementById('globalPwError');
-  const pw    = input.value.trim();
+  const pw    = input.value;
+  console.log('Senha digitada:', JSON.stringify(pw), '| Esperada:', JSON.stringify(APP_PW), '| Match:', pw===APP_PW);
   if(pw === APP_PW){
     localStorage.setItem(APP_KEY, '1');
     input.value = '';
     document.getElementById('globalPwModal').style.display = 'none';
     unlockApp();
   } else {
+    err.textContent = '✕ Senha incorreta: ' + pw.length + ' chars digitados.';
     err.style.display = 'block';
-    input.value = '';
-    input.focus();
-    setTimeout(()=>{ err.style.display='none'; }, 3000);
+    input.select();
+    setTimeout(()=>{ err.style.display='none'; }, 4000);
   }
 }
 
