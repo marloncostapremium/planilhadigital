@@ -79,7 +79,7 @@ footer strong{color:var(--ac)}
   <div><div class="logo">Planilha <span>Digital</span></div><div class="hsub">Governança 2026</div></div>
   <div class="hbtns">
     <!-- GLOBAL LOCK BADGE -->
-    <div id="globalBadge" onclick="document.getElementById('globalPwModal').style.display='flex';setTimeout(()=>{const i=document.getElementById('globalPwInput');if(i)i.focus();},120)" title="Clique para desbloquear o app"
+    <div id="globalBadge" onclick="showGlobalPwModal()" title="Clique para desbloquear o app"
       style="display:flex;align-items:center;gap:.35rem;background:#c6282815;border:1px solid #c6282844;border-radius:20px;padding:.28rem .7rem;cursor:pointer;transition:all .2s;margin-right:.4rem">
       <span id="globalLockIcon" style="font-size:.9rem">&#128274;</span>
       <span id="globalLockLabel" style="font-size:.68rem;font-weight:600;color:#fca5a5;white-space:nowrap">Bloqueado</span>
@@ -120,7 +120,7 @@ footer strong{color:var(--ac)}
 </div>
 
 <!-- GLOBAL PASSWORD MODAL -->
-<div id="globalPwModal" style="display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000ee;z-index:99999;align-items:center;justify-content:center;padding:1rem">
+<div id="globalPwModal" style="display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000cc;z-index:99999;align-items:center;justify-content:center;padding:1rem">
   <div style="background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:2rem 1.8rem;max-width:340px;width:100%;text-align:center;box-shadow:0 8px 40px #0008">
     <div style="font-size:2rem;margin-bottom:.5rem">🔐</div>
     <div style="font-size:1.2rem;font-weight:800;color:var(--wh);margin-bottom:.3rem;letter-spacing:.04em">Planilha <span style="color:var(--ac)">Digital</span></div>
@@ -130,9 +130,9 @@ footer strong{color:var(--ac)}
     <div id="pwStep">
       <input type="password" id="globalPwInput" placeholder="Digite a senha..."
         style="width:100%;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:.65rem 1rem;color:var(--wh);font-size:.95rem;outline:none;margin-bottom:.7rem;text-align:center;letter-spacing:.08em"
-        onkeydown="if(event.key==='Enter'){ event.preventDefault(); checkGlobalPassword(); }">
+        onkeydown="if(event.key==='Enter') checkGlobalPassword()">
       <div id="globalPwError" style="font-size:.73rem;color:#f43f5e;margin-bottom:.6rem;display:none">✕ Senha incorreta. Tente novamente.</div>
-      <button class="btn" type="button" onclick="checkGlobalPassword()" style="width:100%;padding:.6rem;font-size:.9rem;margin-bottom:.6rem">🔓 Acessar</button>
+      <button class="btn" onclick="checkGlobalPassword()" style="width:100%;padding:.6rem;font-size:.9rem;margin-bottom:.6rem">🔓 Acessar</button>
       <button id="bioBtnAlt" onclick="triggerBiometric()" style="display:none;width:100%;padding:.55rem;font-size:.85rem;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--mu);cursor:pointer">
         👆 Usar Biometria
       </button>
@@ -773,63 +773,7 @@ footer strong{color:var(--ac)}
   </div>
 
   <!-- LISTA RESUMIDA DE VIAGENS -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">
-    <div class="stit" style="margin:0">Registros de Viagens</div>
-    <button onclick="toggleFiltrosViagem()" id="btn-filtros-viag"
-      style="background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.35);color:#a78bfa;
-             border-radius:8px;padding:.35rem .9rem;font-size:.78rem;cursor:pointer;
-             display:flex;align-items:center;gap:.4rem;font-weight:600">
-      ⚙ Filtros
-    </button>
-  </div>
-
-  <!-- Painel de filtros -->
-  <div id="viag-filtros-panel" style="display:none;background:rgba(10,20,50,.6);border:1px solid rgba(124,58,237,.25);
-       border-radius:10px;padding:14px 16px;margin-bottom:10px">
-    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
-      <div>
-        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Consultor</div>
-        <select id="filt-viag-cons" onchange="filtrarViagemTabela()"
-          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
-                 border-radius:6px;padding:6px 10px;font-size:.78rem;min-width:130px">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div>
-        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Cidade</div>
-        <select id="filt-viag-cidade" onchange="filtrarViagemTabela()"
-          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
-                 border-radius:6px;padding:6px 10px;font-size:.78rem;min-width:130px">
-          <option value="">Todas</option>
-        </select>
-      </div>
-      <div>
-        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">UF</div>
-        <select id="filt-viag-uf" onchange="filtrarViagemTabela()"
-          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
-                 border-radius:6px;padding:6px 10px;font-size:.78rem;min-width:80px">
-          <option value="">Todas</option>
-        </select>
-      </div>
-      <div>
-        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Data Ida (de)</div>
-        <input type="date" id="filt-viag-ida" onchange="filtrarViagemTabela()"
-          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
-                 border-radius:6px;padding:6px 10px;font-size:.78rem">
-      </div>
-      <div>
-        <div style="font-size:.68rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Data Retorno (até)</div>
-        <input type="date" id="filt-viag-ret" onchange="filtrarViagemTabela()"
-          style="background:rgba(10,20,50,.8);border:1px solid rgba(255,255,255,.12);color:#e2e8f0;
-                 border-radius:6px;padding:6px 10px;font-size:.78rem">
-      </div>
-      <button onclick="limparFiltrosViagem()"
-        style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#f87171;
-               border-radius:6px;padding:6px 14px;font-size:.75rem;cursor:pointer;font-weight:600;
-               align-self:flex-end">✕ Limpar</button>
-    </div>
-  </div>
-
+  <div class="stit" style="margin-top:1.5rem">Registros de Viagens</div>
   <div class="cc" style="overflow-x:auto">
     <table class="dt" id="vg-resumo">
       <thead><tr>
@@ -914,25 +858,23 @@ function showGlobalPwModal(){
   if(isAppUnlocked()) return;
   const m = document.getElementById('globalPwModal');
   m.style.display = 'flex';
-  initModalView();
   setTimeout(()=>{ const i=document.getElementById('globalPwInput'); if(i) i.focus(); }, 120);
 }
 
 function checkGlobalPassword(){
-  const input = document.getElementById('globalPwInput');
-  const err   = document.getElementById('globalPwError');
-  const pw    = input.value;
-  console.log('Senha digitada:', JSON.stringify(pw), '| Esperada:', JSON.stringify(APP_PW), '| Match:', pw===APP_PW);
+  var input = document.getElementById('globalPwInput');
+  var err   = document.getElementById('globalPwError');
+  var pw    = input.value;
   if(pw === APP_PW){
     localStorage.setItem(APP_KEY, '1');
     input.value = '';
     document.getElementById('globalPwModal').style.display = 'none';
     unlockApp();
   } else {
-    err.textContent = '✕ Senha incorreta: ' + pw.length + ' chars digitados.';
     err.style.display = 'block';
-    input.select();
-    setTimeout(()=>{ err.style.display='none'; }, 4000);
+    input.value = '';
+    input.focus();
+    setTimeout(function(){ err.style.display='none'; }, 3000);
   }
 }
 
@@ -958,6 +900,8 @@ function unlockApp(){
   document.querySelectorAll('.btn-lancar').forEach(el=>{
     el.disabled=false; el.style.opacity=''; el.style.cursor='';
   });
+
+  setTimeout(function(){ try{ if(typeof loadFromSheets==='function') loadFromSheets(); }catch(e){} }, 300);
 }
 
 function lockApp(){
@@ -971,15 +915,8 @@ function initAppLock(){
     unlockApp();
   } else {
     lockApp();
-    setTimeout(()=>{
-      const m = document.getElementById('globalPwModal');
-      if(m) m.style.display='flex';
-      showPwStep();
-      setTimeout(()=>{
-        const i=document.getElementById('globalPwInput');
-        if(i){ i.focus(); i.value=''; }
-      },150);
-    }, 300);
+    // Show modal automatically on first visit
+    setTimeout(showGlobalPwModal, 400);
   }
 }
 
@@ -2540,7 +2477,7 @@ async function loadFromSheets(silent=false){
 }
 
 
-async async function gasRequest(params){
+async function gasRequest(params){
   const url = localStorage.getItem('planilha-digital_api_url') || _DEFAULT_API;
   if(!url) return null;
   try {
@@ -2564,6 +2501,7 @@ async function apiAdd(lancamento){
 
   const params = {
     action:'add',
+    sheet:'Lançamentos_S2',
     ger:    lancamento.ger    ||'',
     cons:   lancamento.cons   ||'',
     ind:    lancamento.ind    ||'',
@@ -2592,24 +2530,12 @@ async function apiAdd(lancamento){
     const text = await res.text();
     let json;
     try { json = JSON.parse(text); } catch(e) {}
-    if(json && (json.status === 'ok' || json.status === 'ok' || json.id)){
+    if(json && json.status === 'ok'){
       setBanner('✅ Salvo no Google Sheets!','#1d9e75');
       setTimeout(()=>setBanner('',''), 3000);
       return json.id || localId;
-    } else if(json && json.status === 'error'){
-      setBanner('❌ Erro GAS: ' + (json.message||''),'#c62828');
-      console.error('GAS error:', json);
-      return localId;
     } else {
-      // Se chegou resposta mas não reconhecemos — pode ser redirect do Google
-      // Considerar sucesso se tiver resposta HTTP 200
-      if(res.ok){
-        setBanner('✅ Enviado!','#1d9e75');
-        setTimeout(()=>setBanner('',''), 3000);
-        return localId;
-      }
-      setBanner('⚠️ Resposta inesperada: ' + text.substring(0,60),'#ba7517');
-      console.warn('Unexpected response:', text.substring(0,200));
+      setBanner('⚠️ Resposta inesperada do servidor.','#ba7517');
       return localId;
     }
   } catch(err){
@@ -2810,9 +2736,8 @@ function calcDiasViag(){
     diasEl.value = '';
     return;
   }
-  // Diferença simples entre os numerais dos dias (ex: 8-6=2)
-  const diff = d2.getDate() - d1.getDate();
-  diasEl.value = diff > 0 ? diff : Math.round((d2 - d1) / (1000*60*60*24));
+  const diff = Math.round((d2 - d1) / (1000*60*60*24)) + 1;
+  diasEl.value = diff;
 }
 
 function limparFormViag(){
@@ -2849,10 +2774,9 @@ function salvarViagem(){
   if(!uf)  { showError('Selecione a UF.'); return; }
   if(uf && !cid){ showError('Selecione a Cidade — campo obrigatório.'); return; }
 
-  const _idaMes = ida ? ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][parseInt(ida.split('-')[1])-1] || '' : '';
   const viagem = {
     id: 'V' + Date.now(),
-    cons, ger, ida, ret, dias, uf, cidade: cid, obs, tipo, ausencia, mes: _idaMes
+    cons, ger, ida, ret, dias, uf, cidade: cid, obs, tipo, ausencia
   };
 
   VIAGENS.push(viagem);
@@ -2958,82 +2882,57 @@ function renderViagemCal(){
   const dias = new Date(ano, mes+1, 0).getDate();
   const ini  = new Date(ano, mes, 1).getDay(); // day of week of 1st
 
-  // PT day abbreviations (Dom=0 ... Sáb=6)
-  const DIAS_SEM_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-
-  // Unique colors per consultant
-  const CONS_CAL_COLORS = {
-    'Angélica Silva':'#10b981','Elaíne Azevedo':'#3b82f6','Silvia Cunha':'#f59e0b',
-    'Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899',
-    'Cassandra Andrade':'#06b6d4','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16',
-    'Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e',
-    'Saulo Guedes':'#8b5cf6','Regional':'#64748b'
-  };
-
-  // Build map: day -> [{cons, uf, cidade}]
+  // Build map: dateStr -> [consultor (cidade), ...]
   const dayMap = {};
-  // Helper: parse date string robustly (handles YYYY-MM-DD, ISO, DD/MM/YYYY)
-  const parseVgDate = s => {
-    if(!s) return null;
-    s = String(s).trim();
-    const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if(m1) return new Date(+m1[1], +m1[2]-1, +m1[3]);
-    const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-    if(m2) return new Date(+m2[3], +m2[2]-1, +m2[1]);
-    const dt = new Date(s); return isNaN(dt.getTime()) ? null : dt;
-  };
-
   VIAGENS.forEach(v => {
     if(!v.ida || !v.ret) return;
-    const d1 = parseVgDate(v.ida);
-    const d2 = parseVgDate(v.ret);
-    if(!d1 || !d2) return;
+    const d1 = new Date(v.ida + 'T12:00:00');
+    const d2 = new Date(v.ret + 'T12:00:00');
     for(let cur = new Date(d1); cur <= d2; cur.setDate(cur.getDate()+1)){
       if(cur.getFullYear()===ano && cur.getMonth()===mes){
         const day = cur.getDate();
         if(!dayMap[day]) dayMap[day] = [];
-        dayMap[day].push({ cons: v.cons, uf: v.uf||'', cidade: v.cidade||'' });
+        const firstName = v.cons.split(' ')[0];
+      const cityLine = v.cidade ? v.cidade + ' ' + (v.uf ? '· '+v.uf : '') : (v.uf || '');
+      const label = firstName + (cityLine ? '|' + cityLine : '');
+        dayMap[day].push({ label, cons: v.cons });
       }
     }
   });
+
+  // Unique colors per consultant
+  const CONS_CAL_COLORS = {'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Silvia Cunha':'#f59e0b','Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899','Cassandra Andrade':'#0891b2','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16','Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e','Saulo Guedes':'#8b5cf6','Regional':'#6b7280'};
 
   let out = '';
 
   // Empty cells before 1st
   for(let i = 0; i < ini; i++){
-    out += '<div style="min-height:78px"></div>';
+    out += '<div style="min-height:70px"></div>';
   }
 
-  const today = new Date();
-
   for(let d = 1; d <= dias; d++){
-    const dtObj  = new Date(ano, mes, d);
-    const diaSem = DIAS_SEM_PT[dtObj.getDay()];
-    const isFds  = [0,6].includes(dtObj.getDay());
+    const fds    = [0,6].includes(new Date(ano, mes, d).getDay());
     const events = dayMap[d] || [];
     const hasBg  = events.length > 0;
+    const bg     = hasBg ? 'var(--sf)' : fds ? 'var(--sf2)' : 'var(--sf2)';
+    const bc     = hasBg ? '#1d9e7544' : 'var(--bd)';
+    const today  = new Date();
     const isToday= today.getDate()===d && today.getMonth()===mes && today.getFullYear()===ano;
-    const bc     = isToday ? '#7c3aed' : hasBg ? 'rgba(255,255,255,.12)' : 'var(--bd)';
-    const bg     = isToday ? 'rgba(124,58,237,.12)' : hasBg ? 'var(--sf)' : 'var(--sf2)';
 
     const evHtml = events.slice(0,3).map(e => {
-      const c    = CONS_CAL_COLORS[e.cons] || '#8890b0';
-      const nome = (e.cons||'').split(' ')[0];
-      const loc  = e.cidade ? ' · ' + e.cidade : (e.uf ? ' · ' + e.uf : '');
-      return `<div style="background:${c}18;border-left:2px solid ${c};border-radius:0 3px 3px 0;
-                   padding:.12rem .28rem;margin-bottom:.15rem;overflow:hidden" title="${e.cons} — ${e.cidade||e.uf||''}">
-        <div style="font-size:.6rem;color:${c};font-weight:700;white-space:nowrap;
-                    text-overflow:ellipsis;overflow:hidden">${nome}${loc}</div>
-      </div>`;
-    }).join('') + (events.length > 3 ? `<div style="font-size:.55rem;color:var(--mu);padding:.1rem .25rem">+${events.length-3} mais</div>` : '');
+      const c = CONS_CAL_COLORS[e.cons] || '#8890b0';
+      const parts = e.label.split('|');
+      const namePart = parts[0] || e.label;
+      const cityPart = parts[1] || '';
+      return '<div style="background:'+c+'15;border-left:2px solid '+c+';border-radius:0 3px 3px 0;padding:.1rem .25rem;margin-bottom:.15rem;overflow:hidden" title="'+e.label+'">'
+        + '<div style="font-size:.6rem;color:'+c+';font-weight:700;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">'+namePart+'</div>'
+        + (cityPart ? '<div style="font-size:.52rem;color:'+c+';opacity:.75;white-space:nowrap;text-overflow:ellipsis;overflow:hidden">'+cityPart+'</div>' : '')
+        + '</div>';
+    }).join('') + (events.length > 3 ? '<div style="font-size:.55rem;color:var(--mu)">+' + (events.length-3) + ' mais</div>' : '');
 
-    out += `<div style="background:${bg};border:1px solid ${bc};border-radius:6px;
-                 padding:.3rem .35rem;min-height:78px;cursor:${hasBg?'pointer':'default'}"
-              onclick="${hasBg?`vgDayDetail(${d})`:''}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-        <span style="font-size:.72rem;font-weight:700;color:${isToday?'#7c3aed':isFds?'var(--mu)':'var(--wh)'}">${d}</span>
-        <span style="font-size:.58rem;color:${isToday?'#a78bfa':'#475569'};font-weight:600">${diaSem}</span>
-      </div>
+    out += `<div style="background:${bg};border:1px solid ${isToday?'#1d9e75':bc};border-radius:5px;padding:.3rem .35rem;min-height:70px;cursor:${hasBg?'pointer':'default'}"
+      onclick="${hasBg?`vgDayDetail(${d})`:''}">
+      <div style="font-size:.72rem;font-weight:700;color:${isToday?'#1d9e75':fds?'var(--mu)':'var(--wh)'};margin-bottom:.2rem">${d}${isToday?' ●':''}</div>
       ${evHtml}
     </div>`;
   }
@@ -3051,122 +2950,28 @@ function renderViagemResumo(){
   }
   const MESES_V2 = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  // Format date as "Qui Ago 06" using PT abbreviations
-  const DIAS_SEM_R = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  // Formata qualquer string de data para "Qui 06"
-  const fmtPT = d => {
-    if(!d || d === '\u2014') return '\u2014';
-    const s = String(d).trim();
-    // Já está no formato "Seg 13" — retorna direto
-    if(s.match(/^[A-ZÁa-záéíóú][a-záéíóú]{1,2}\s\d{2}$/)) return s;
-    let dt;
-    const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if(m1){ dt = new Date(+m1[1], +m1[2]-1, +m1[3]); }
-    else {
-      const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-      if(m2){ dt = new Date(+m2[3], +m2[2]-1, +m2[1]); }
-      else { dt = new Date(s); }
-    }
-    if(!dt || isNaN(dt.getTime())) return s;
-    const dia = String(dt.getDate()).padStart(2,'0');
-    return DIAS_SEM_R[dt.getDay()] + ' ' + dia;
-  };
-  const getMes = (ida, mes) => {
-    if(mes) return mes;
+  const fmt = d => d ? d.split('-').reverse().join('/') : '—';
+  const getMes = ida => {
     if(!ida) return '—';
-    const mi = parseInt((ida||'').split('-')[1])-1;
-    return MESES_V2[mi] || '—';
+    const m = parseInt(ida.split('-')[1])-1;
+    return MESES_V2[m] || '—';
   };
-  const CONS_C2 = {
-    'Angélica Silva':'#10b981','Elaíne Azevedo':'#3b82f6','Silvia Cunha':'#f59e0b',
-    'Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899',
-    'Cassandra Andrade':'#06b6d4','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16',
-    'Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e',
-    'Saulo Guedes':'#8b5cf6','Regional':'#64748b'
-  };
-
   // Sort by IDA date
   const sorted = [...VIAGENS].sort((a,b)=>(a.ida||'').localeCompare(b.ida||''));
-
-  // Populate filter dropdowns with available values
-  _popularFiltrosViagem(sorted);
-
-  // Apply active filters if any
-  const vFiltradas = _getViagensFiltradas(sorted);
-
-  tb.innerHTML = vFiltradas.map(v => {
+  const CONS_C2 = {'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Silvia Cunha':'#f59e0b','Mariana Costa':'#ef4444','Fabiano Cortez':'#a855f7','Francisco Neto':'#ec4899','Cassandra Andrade':'#0891b2','Joanna Macedo':'#f97316','Rafaela Correa':'#84cc16','Fernando Maia':'#6366f1','Thiago Martins':'#14b8a6','Marco Rocha':'#f43f5e','Saulo Guedes':'#8b5cf6','Regional':'#6b7280'};
+  tb.innerHTML = sorted.map(v => {
     const c = CONS_C2[v.cons] || '#8890b0';
-    const firstName = (v.cons||'').split(' ')[0];
     return `<tr>
-      <td><span style="display:inline-flex;align-items:center;gap:.4rem">
-        <span style="width:8px;height:8px;border-radius:50%;background:${c};flex-shrink:0"></span>
-        <b>${firstName}</b>
-      </span></td>
-      <td style="color:var(--mu)">${v.cidade||'—'}</td>
-      <td style="white-space:nowrap;font-size:.78rem">${fmtPT(v.ida)}</td>
-      <td style="white-space:nowrap;font-size:.78rem">${fmtPT(v.ret)}</td>
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};margin-right:.4rem"></span><b>${v.cons}</b></td>
+      <td style="color:var(--mu)">${v.cidade||v.uf||'—'}</td>
+      <td style="white-space:nowrap">${fmt(v.ida)}</td>
+      <td style="white-space:nowrap">${fmt(v.ret)}</td>
       <td style="text-align:center;font-weight:700;color:var(--ac)">${v.dias||'—'}</td>
-      <td>${getMes(v.ida, v.mes)}</td>
+      <td>${getMes(v.ida)}</td>
       <td style="font-size:.72rem;color:var(--mu)">${v.tipo||v.ausencia||'—'}</td>
     </tr>`;
   }).join('');
 }
-
-// ── FILTROS VIAGENS ───────────────────────────────────────────────────────────
-function toggleFiltrosViagem(){
-  const p = document.getElementById('viag-filtros-panel');
-  const b = document.getElementById('btn-filtros-viag');
-  if(!p) return;
-  const open = p.style.display === 'none' || !p.style.display;
-  p.style.display = open ? 'block' : 'none';
-  if(b) b.style.background = open ? 'rgba(124,58,237,.3)' : 'rgba(124,58,237,.15)';
-}
-
-function _popularFiltrosViagem(dados){
-  const sel = (id, arr) => {
-    const el = document.getElementById(id);
-    if(!el) return;
-    const cur = el.value;
-    el.innerHTML = `<option value="">Todos</option>` +
-      arr.map(v=>`<option value="${v}">${v}</option>`).join('');
-    if(cur) el.value = cur;
-  };
-  const uniq = (arr, fn) => [...new Set(arr.map(fn).filter(Boolean))].sort();
-  sel('filt-viag-cons',   uniq(dados, v => v.cons));
-  sel('filt-viag-cidade', uniq(dados, v => v.cidade));
-  sel('filt-viag-uf',     uniq(dados, v => v.uf));
-}
-
-function _getViagensFiltradas(dados){
-  const cons   = document.getElementById('filt-viag-cons')?.value   || '';
-  const cidade = document.getElementById('filt-viag-cidade')?.value || '';
-  const uf     = document.getElementById('filt-viag-uf')?.value     || '';
-  const idaDe  = document.getElementById('filt-viag-ida')?.value    || '';
-  const retAte = document.getElementById('filt-viag-ret')?.value    || '';
-  return dados.filter(v => {
-    if(cons   && (v.cons||'')   !== cons)   return false;
-    if(cidade && (v.cidade||'') !== cidade) return false;
-    if(uf     && (v.uf||'')     !== uf)     return false;
-    if(idaDe  && (v.ida||'')    <  idaDe)   return false;
-    if(retAte && (v.ret||'')    >  retAte)  return false;
-    return true;
-  });
-}
-
-function filtrarViagemTabela(){ renderViagemResumo(); }
-
-function limparFiltrosViagem(){
-  ['filt-viag-cons','filt-viag-cidade','filt-viag-uf'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.value = '';
-  });
-  ['filt-viag-ida','filt-viag-ret'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.value = '';
-  });
-  renderViagemResumo();
-}
-// ─────────────────────────────────────────────────────────────────────────────
 
 function vgDayDetail(d){var ano=_vgCalAno,mes=_vgCalMes;var pad=function(n){return String(n).padStart(2,'0');};var dateStr=ano+'-'+pad(mes+1)+'-'+pad(d);var viagens=VIAGENS.filter(function(v){return v.ida<=dateStr&&v.ret>=dateStr;});if(!viagens.length)return;var fmtD=function(s){return s?s.split('-').reverse().join('/'):'--';};var info=viagens.map(function(v){return '- '+v.cons+'\n  Gerente: '+v.ger+' | IDA: '+fmtD(v.ida)+' | Retorno: '+fmtD(v.ret)+' | '+v.dias+' dia(s)'+(v.cidade?' | '+v.uf+' - '+v.cidade:'| '+v.uf)+(v.obs?' | Obs: '+v.obs:'');}).join('\n\n');alert('Viagens em '+pad(d)+'/'+pad(mes+1)+'/'+ano+':\n\n'+info);}
 
@@ -3178,7 +2983,7 @@ async function apiAddViagem(v){
     const params = {
       action:'addViagem', id:v.id, cons:v.cons, ger:v.ger,
       ida:v.ida, ret:v.ret, dias:v.dias, uf:v.uf,
-      cidade:v.cidade||'', tipo:v.tipo||'', ausencia:v.ausencia||'', obs:v.obs||'', mes:v.mes||''
+      cidade:v.cidade||'', tipo:v.tipo||'', ausencia:v.ausencia||'', obs:v.obs||''
     };
     const qs = Object.entries(params).map(([k,v2])=>k+'='+encodeURIComponent(String(v2||''))).join('&');
     await fetch(url+'?'+qs, {method:'GET', redirect:'follow'});
@@ -3212,18 +3017,7 @@ async function loadViagensFromSheets(){
     const normalized = arr.map(v => {
       // Suporte a qualquer variação de nome de campo
       const getField = (...keys) => { for(const k of keys){ if(v[k] !== undefined && v[k] !== null && v[k] !== '') return String(v[k]); } return ''; };
-      const normDate = d => {
-        if(!d) return '';
-        const s = String(d).trim();
-        // ISO: 2026-08-06T... or 2026-08-06 ...
-        const m1 = s.match(/^(\d{4}-\d{2}-\d{2})/);
-        if(m1) return m1[1];
-        // DD/MM/YYYY
-        const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-        if(m2) return `${m2[3]}-${m2[2]}-${m2[1]}`;
-        // Formato "Seg 13" ou "Qui 06" — retorna como está (já formatado)
-        return s;
-      };
+      const normDate = d => { if(!d) return ''; return String(d).replace('T',' ').substring(0,10); };
       return {
         id:       getField('id','ID'),
         cons:     getField('cons','Consultor','CONSULTOR'),
@@ -3235,17 +3029,7 @@ async function loadViagensFromSheets(){
         cidade:   getField('cidade','Cidade','CIDADE'),
         tipo:     getField('tipo','Tipo Viagem','tipo_viagem','TIPO') || 'Visitação Médica',
         ausencia: getField('ausencia','Ausência','Ausencia','AUSENCIA'),
-        obs:      getField('obs','Obs','OBS','Observações'),
-        mes:      (() => {
-          const m = getField('mes','Mês','MES','Mes');
-          if(m) return m;
-          // calcular do campo ida se não vier do Sheets
-          const idaStr = normDate(getField('ida','IDA','Ida'));
-          if(!idaStr) return '';
-          const mi = parseInt(idaStr.split('-')[1])-1;
-          return ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
-                  'Agosto','Setembro','Outubro','Novembro','Dezembro'][mi] || '';
-        })()
+        obs:      getField('obs','Obs','OBS','Observações')
       };
     });
     
@@ -3431,13 +3215,17 @@ async function triggerBiometric(){
   }
 }
 
-// Mostrar tela correta ao abrir modal — sempre senha primeiro
+// Mostrar tela correta ao abrir modal
 function initModalView(){
-  showPwStep();
-  // Oferecer biometria como botão alternativo se disponível
-  if(isBioAvailable() && isBioEnrolled()){
-    const b = document.getElementById('bioBtnAlt');
-    if(b) b.style.display = 'block';
+  if(isBioEnrolled() && isBioAvailable()){
+    showBioStep();
+  } else {
+    showPwStep();
+    // Mostrar botão de biometria alternativa se disponível
+    if(isBioAvailable() && isBioEnrolled()){
+      const b = document.getElementById('bioBtnAlt');
+      if(b) b.style.display = 'block';
+    }
   }
 }
 
