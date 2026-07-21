@@ -79,7 +79,7 @@ footer strong{color:var(--ac)}
   <div><div class="logo">Planilha <span>Digital</span></div><div class="hsub">Governança 2026</div></div>
   <div class="hbtns">
     <!-- GLOBAL LOCK BADGE -->
-    <div id="globalBadge" onclick="showGlobalPwModal()" title="Clique para desbloquear o app"
+    <div id="globalBadge" onclick="document.getElementById('globalPwModal').style.display='flex';setTimeout(()=>{const i=document.getElementById('globalPwInput');if(i)i.focus();},120)" title="Clique para desbloquear o app"
       style="display:flex;align-items:center;gap:.35rem;background:#c6282815;border:1px solid #c6282844;border-radius:20px;padding:.28rem .7rem;cursor:pointer;transition:all .2s;margin-right:.4rem">
       <span id="globalLockIcon" style="font-size:.9rem">&#128274;</span>
       <span id="globalLockLabel" style="font-size:.68rem;font-weight:600;color:#fca5a5;white-space:nowrap">Bloqueado</span>
@@ -976,8 +976,11 @@ function initAppLock(){
     unlockApp();
   } else {
     lockApp();
-    // Show modal automatically on first visit
-    setTimeout(showGlobalPwModal, 400);
+    // Show modal automatically
+    setTimeout(()=>{
+      document.getElementById('globalPwModal').style.display='flex';
+      setTimeout(()=>{const i=document.getElementById('globalPwInput');if(i)i.focus();},120);
+    }, 400);
   }
 }
 
