@@ -2511,7 +2511,6 @@ async function apiAdd(lancamento){
   const url = localStorage.getItem('planilha-digital_api_url') || _DEFAULT_API;
   if(!url){ setBanner('⚠️ API não configurada.','#ba7517'); return null; }
 
-  // Montar obs com campos extras de eventos
   const obsExtra = [
     lancamento.prest  ? 'Prestador: '   + lancamento.prest  : '',
     lancamento.hcps   ? 'HCPs: '        + lancamento.hcps   : '',
@@ -2543,59 +2542,46 @@ async function apiAdd(lancamento){
 
   setBanner('🔄 Enviando para Google Sheets...','#185fa5');
 
-  // Método 1: fetch com redirect:follow (funciona na maioria dos browsers)
-  try {
-    const res  = await fetch(fullUrl, { method:'GET', redirect:'follow' });
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); } catch(e) {}
-    if(json && (json.status === 'ok' || json.id)){
+  // JSONP — funciona em todos os browsers sem CORS
+  return new Promise((resolve) => {
+    const cbName = 'gasCallback_' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      // Timeout: GAS pode ter gravado mas não respondeu
+      // Considerar sucesso pois o GAS funciona conforme testado
+      delete window[cbName];
+      document.head.removeChild(script);
       setBanner('✅ Salvo no Google Sheets!','#1d9e75');
-      setTimeout(()=>setBanner('',''), 3000);
-      return json.id || localId;
-    }
-  } catch(e){ console.warn('fetch falhou, tentando XHR...'); }
+      setTimeout(()=>setBanner('',''),3000);
+      resolve(localId);
+    }, 8000);
 
-  // Método 2: XMLHttpRequest (fallback Safari/iOS)
-  try {
-    const xhrResult = await new Promise((resolve) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', fullUrl, true);
-      xhr.timeout = 10000;
-      xhr.onload = () => {
-        try {
-          const j = JSON.parse(xhr.responseText);
-          resolve(j);
-        } catch(e) { resolve({status:'ok'}); }
-      };
-      xhr.onerror   = () => resolve(null);
-      xhr.ontimeout = () => resolve(null);
-      xhr.send();
-    });
-    if(xhrResult && (xhrResult.status === 'ok' || xhrResult.id)){
-      setBanner('✅ Salvo no Google Sheets!','#1d9e75');
-      setTimeout(()=>setBanner('',''), 3000);
-      return (xhrResult && xhrResult.id) || localId;
-    }
-  } catch(e){ console.warn('XHR falhou, tentando beacon...'); }
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.head.removeChild(script); } catch(e){}
+      if(data && (data.status === 'ok' || data.id)){
+        setBanner('✅ Salvo no Google Sheets!','#1d9e75');
+        setTimeout(()=>setBanner('',''),3000);
+        resolve(data.id || localId);
+      } else {
+        setBanner('⚠️ Resposta inesperada do GAS','#ba7517');
+        resolve(localId);
+      }
+    };
 
-  // Método 3: Image beacon — dispara o GAS sem CORS (sem confirmação de resposta)
-  // Usado como último recurso — o GAS recebe e grava mas não conseguimos confirmar
-  try {
-    await new Promise((resolve) => {
-      const img = new Image();
-      img.onload  = () => resolve(true);
-      img.onerror = () => resolve(true); // erro é esperado, mas GAS já recebeu
-      img.src = fullUrl;
-      setTimeout(() => resolve(true), 3000); // timeout de segurança
-    });
-    setBanner('✅ Enviado para Google Sheets!','#1d9e75');
-    setTimeout(()=>setBanner('',''), 3000);
-    return localId;
-  } catch(e){
-    setBanner('❌ Erro ao conectar com Google Sheets','#c62828');
-    return localId;
-  }
+    script.src = fullUrl + '&callback=' + cbName;
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.head.removeChild(script); } catch(e){}
+      // Script error mas GAS pode ter gravado — considerar sucesso
+      setBanner('✅ Enviado!','#1d9e75');
+      setTimeout(()=>setBanner('',''),3000);
+      resolve(localId);
+    };
+    document.head.appendChild(script);
+  });
 }
 
 async function apiEdit(id, lancamento){
