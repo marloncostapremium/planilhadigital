@@ -1839,6 +1839,8 @@ function addEvento(){
   const data   = g('ev-dat');
   const val    = parseFloat(g('ev-val'))||0;
 
+  // Garantir ger preenchido
+  const gerFinal = ger || 'Marlon Costa';
   if(!cons)   { showError('Selecione o Consultor.');return; }
   if(!ind)    { showError('Selecione a Indicação.');return; }
   if(!fra)    { showError('Selecione a Franquia.');return; }
@@ -1849,7 +1851,7 @@ function addEvento(){
   if(!val)    { showError('Informe o Valor Total.');return; }
 
   const lanc = {
-    ger, cons, ind, fra,
+    ger: gerFinal, cons, ind, fra,
     tipo: tipo, tipoAp, soc, prest, hcps, palest,
     verba, medico, status, mes, data, val,
     _tipo_origem: 'evento', _lancadoEm: new Date().toLocaleDateString('pt-BR'), _id: null
@@ -1892,6 +1894,10 @@ function addEvento(){
   setBanner('🔄 Enviando para Google Sheets...','#185fa5');
   apiAdd(lanc).then(id=>{
     if(id){ lanc._id=id; lanc.id=id; }
+    else { setBanner('⚠️ Evento salvo localmente — verifique a conexão','#ba7517'); }
+  }).catch(e=>{
+    console.error('apiAdd evento error:', e);
+    setBanner('⚠️ Erro ao salvar evento — tente novamente','#ba7517');
   });
 }
 
@@ -2506,6 +2512,13 @@ async function apiAdd(lancamento){
   if(!url){ setBanner('⚠️ API não configurada.','#ba7517'); return null; }
   API_URL = url;
 
+  // Montar obs com campos extras de eventos (prestador, HCPs, palestrante)
+  const obsExtra = [
+    lancamento.prest  ? 'Prestador: '   + lancamento.prest  : '',
+    lancamento.hcps   ? 'HCPs: '        + lancamento.hcps   : '',
+    lancamento.palest ? 'Palestrante: ' + lancamento.palest : ''
+  ].filter(Boolean).join(' | ');
+
   const params = {
     action:'add',
     ger:    lancamento.ger    ||'',
@@ -2519,7 +2532,8 @@ async function apiAdd(lancamento){
     status: lancamento.status ||'',
     mes:    lancamento.mes    ||'',
     data:   lancamento.data   ||'',
-    val:    lancamento.val    ||0
+    val:    lancamento.val    ||0,
+    obs:    obsExtra          ||''
   };
 
   const qs = Object.entries(params)
