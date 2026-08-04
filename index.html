@@ -581,7 +581,7 @@ footer strong{color:var(--ac)}
       <div style="background:linear-gradient(135deg,#f59e0b22,#f59e0b08);border:1px solid #f59e0b44;border-radius:12px;padding:1rem 1.2rem;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:#f59e0b;border-radius:4px 0 0 4px"></div>
         <div style="font-size:.62rem;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem">CC Asma</div>
-        <div style="font-size:1.4rem;font-weight:700;color:var(--wh);font-family:monospace;letter-spacing:.05em">BR0200165</div>
+        <div style="font-size:1.4rem;font-weight:700;color:var(--wh);font-family:monospace;letter-spacing:.05em">BR0200168</div>
         <div style="font-size:.68rem;color:var(--mu);margin-top:.3rem">Indicação · Resp</div>
       </div>
 
@@ -625,7 +625,7 @@ footer strong{color:var(--ac)}
           <div style="font-size:.68rem;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem">Verba Regional · 🌬️ Resp</div>
           <div style="font-size:.9rem;font-weight:600;color:var(--wh)">RESP — SE/NE Marlon</div>
         </div>
-        <div style="font-size:.72rem;font-family:monospace;font-weight:700;color:#0891b2;background:#0891b211;border:1px solid #0891b233;border-radius:6px;padding:.3rem .7rem;white-space:nowrap">DPC-SFBRDUP26-00000000070</div>
+        <div style="font-size:.72rem;font-family:monospace;font-weight:700;color:#0891b2;background:#0891b211;border:1px solid #0891b233;border-radius:6px;padding:.3rem .7rem;white-space:nowrap">DPC-SFBRDUP26-0000000019</div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center;background:var(--sf2);border:1px solid #a855f733;border-radius:10px;padding:.8rem 1.1rem">
@@ -633,7 +633,7 @@ footer strong{color:var(--ac)}
           <div style="font-size:.68rem;font-weight:700;color:#a855f7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem">Verba Regional · 👃 Rino</div>
           <div style="font-size:.9rem;font-weight:600;color:var(--wh)">NP — SE/NE Marlon</div>
         </div>
-        <div style="font-size:.72rem;font-family:monospace;font-weight:700;color:#a855f7;background:#a855f711;border:1px solid #a855f733;border-radius:6px;padding:.3rem .7rem;white-space:nowrap">DPC-SFBRDUN26-00000000007</div>
+        <div style="font-size:.72rem;font-family:monospace;font-weight:700;color:#a855f7;background:#a855f711;border:1px solid #a855f733;border-radius:6px;padding:.3rem .7rem;white-space:nowrap">DPC-SFBRDUP26-0000000016</div>
       </div>
 
     </div>
@@ -3098,8 +3098,8 @@ function exportWbsExcel(){
   const data = [
     ['Tipo','Descrição','Código WBS'],
     ['Tutoria · Resp','Resp (Asma & DPOC)','DPC-SFBRDUP26-00000000008'],
-    ['Verba Regional · Resp','RESP — SE/NE Marlon','DPC-SFBRDUP26-00000000070'],
-    ['Verba Regional · Rino','NP — SE/NE Marlon','DPC-SFBRDUN26-00000000007'],
+    ['Verba Regional · Resp','RESP — SE/NE Marlon','DPC-SFBRDUP26-00000000008'],
+    ['Verba Regional · Rino','NP — SE/NE Marlon','DPC-SFBRDUP26-0000000016'],
   ];
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws['!cols'] = [{wch:25},{wch:25},{wch:35}];
@@ -3111,8 +3111,8 @@ function exportWbsExcel(){
 function exportWbsPDF(){
   const rows = [
     ['Tutoria · Resp','Resp (Asma & DPOC)','DPC-SFBRDUP26-00000000008'],
-    ['Verba Regional · Resp','RESP — SE/NE Marlon','DPC-SFBRDUP26-00000000070'],
-    ['Verba Regional · Rino','NP — SE/NE Marlon','DPC-SFBRDUN26-00000000007'],
+    ['Verba Regional · Resp','RESP — SE/NE Marlon','DPC-SFBRDUP26-00000000008'],
+    ['Verba Regional · Rino','NP — SE/NE Marlon','DPC-SFBRDUP26-0000000016'],
   ];
   const w = window.open('','_blank');
   if(!w) return;
@@ -3128,8 +3128,8 @@ function exportWbsPDF(){
 function exportWbsWord(){
   const content = 'WBS Regionais — \n\n'
     + 'Tutoria · Resp\nResp (Asma & DPOC)\nDPC-SFBRDUP26-00000000008\n\n'
-    + 'Verba Regional · Resp\nRESP — SE/NE Marlon\nDPC-SFBRDUP26-00000000070\n\n'
-    + 'Verba Regional · Rino\nNP — SE/NE Marlon\nDPC-SFBRDUN26-00000000007\n';
+    + 'Verba Regional · Resp\nRESP — SE/NE Marlon\nDPC-SFBRDUP26-00000000008\n\n'
+    + 'Verba Regional · Rino\nNP — SE/NE Marlon\nDPC-SFBRDUP26-0000000016\n';
   const blob = new Blob([content], {type:'application/msword'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
