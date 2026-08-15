@@ -2305,9 +2305,9 @@ function exportPDF(){window.print();}
 
 // ── INTEGRAÇÃO GOOGLE SHEETS ──────────────────────────────────────────────────
 // Cole aqui a URL gerada pelo Google Apps Script após implantar:
-const _DEFAULT_API = 'https://script.google.com/macros/s/AKfycbzbxo8svIsFE7knu4btCzgU7LvOvRyw0ajYvtYXWMuCM3djC0AKtihd3B950FvbKsHe/exec';
+const _DEFAULT_API = 'https://script.google.com/macros/s/AKfycbzQdKyM6skEoNBtZhB8q_z_gKEQiy7sHk4sxejdyGyAEn-G7p2MfO7KKd5kZgHS1Lzp/exec';
 // Sempre garante que a URL correta está salva no localStorage
-if(!localStorage.getItem('dupihub_api_url') || localStorage.getItem('dupihub_api_url').indexOf('AKfycbzbxo8sv') === -1){
+if(!localStorage.getItem('dupihub_api_url') || localStorage.getItem('dupihub_api_url').indexOf('AKfycbzQdKyM6sk') === -1){
   localStorage.setItem('dupihub_api_url', _DEFAULT_API);
 }
 let API_URL = _DEFAULT_API;
