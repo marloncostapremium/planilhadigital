@@ -1823,13 +1823,15 @@ function updateTotals(fra, cons, mes, val, status, signal){
   D.saldo[fra] = D.orc[fra] - D.comp[fra];
   D.pct[fra]   = D.comp[fra] / (D.orc[fra]||1);
   // Atualiza monthly
-  const MF = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const MF = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const mi = MF.indexOf(mes);
-  if(mi>=0) D.monthly[fra][mi] = (D.monthly[fra][mi]||0) + s*val;
-  // Atualiza quarters
+  if(mi>=0 && D.monthly[fra]) D.monthly[fra][mi] = (D.monthly[fra][mi]||0) + s*val;
+  // Atualiza quarters — só se a franquia existir em D.qtr
   const qi = mesToQ(mes);
-  if(isPago) D.qtr.pago[fra][qi] = (D.qtr.pago[fra][qi]||0) + s*val;
-  else       D.qtr.plan[fra][qi] = (D.qtr.plan[fra][qi]||0) + s*val;
+  if(qi >= 0){
+    if(isPago  && D.qtr.pago[fra]) D.qtr.pago[fra][qi] = (D.qtr.pago[fra][qi]||0) + s*val;
+    if(!isPago && D.qtr.plan[fra]) D.qtr.plan[fra][qi] = (D.qtr.plan[fra][qi]||0) + s*val;
+  }
 }
 
 function addEvento(){
