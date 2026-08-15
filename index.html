@@ -180,9 +180,9 @@ footer strong{color:var(--cyan)}
   </div>
 
   <!-- CONSUMO CUMULATIVO S2 -->
-  <div class="stit" style="margin-top:1.5rem">Consumo Cumulativo S2 — RN &amp; Speaker Meetings (Jul/2026 em diante)</div>
+  <div class="stit" style="margin-top:1.5rem">Consumo Cumulativo S2 — Acumulado Mensal (Jul/2026 em diante)</div>
   <div class="cc" style="margin-bottom:1rem">
-    <div class="ct">Gasto acumulado até hoje — por franquia (Pago + Planejado)</div>
+    <div class="ct">Total acumulado por mês — Resp &amp; Rino · Lançamentos_S2 (todos os tipos)</div>
     <div style="height:240px"><canvas id="cCumulS2"></canvas></div>
     <div id="cumulS2Info" style="display:flex;gap:1.5rem;margin-top:.6rem;flex-wrap:wrap;font-size:.75rem"></div>
   </div>
@@ -885,60 +885,69 @@ function initAppLock(){
 function initLancLock(){ initAppLock(); }
 function showPwModal(){ showGlobalPwModal(); }
 
-// ── CONSUMO CUMULATIVO S2 ─────────────────────────────────────────────────────
+// ── CONSUMO CUMULATIVO S2 — MENSAL ────────────────────────────────────────────
 function buildCumulS2(){
   const canv = document.getElementById('cCumulS2');
   const info = document.getElementById('cumulS2Info');
   if(!canv) return;
 
-  const TIPOS_S2 = ['Almoço','Jantar','Café','Refeição de Negócios (RN)','Speaker Meetings'];
-  const S2_START = new Date('2026-07-01');
-  const TODAY    = new Date();
+  const S2_START_YM = '2026-07'; // a partir de julho/2026
+  const TODAY = new Date();
+  const TODAY_YM = TODAY.toISOString().substring(0,7); // "YYYY-MM"
 
-  // Filter: S2 date range, only RN and Speaker Meetings
+  const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  // Filtra TODOS os lançamentos S2 (qualquer tipo) a partir de Jul/2026
   const lancs = allLancs().filter(l=>{
-    if(!TIPOS_S2.includes(l.tipo)) return false;
-    if(!l.data) return false;
-    const d = new Date(l.data);
-    return d >= S2_START && d <= TODAY;
+    if(!l.data || typeof l.data !== 'string') return false;
+    const ym = l.data.substring(0,7); // "YYYY-MM"
+    if(ym.length < 7 || !ym.match(/^\d{4}-\d{2}$/)) return false;
+    return ym >= S2_START_YM && ym <= TODAY_YM;
   });
 
-  // Build sorted unique dates with cumulative totals per franquia
-  const allDates = [...new Set(lancs.map(l=>l.data))].sort();
-  if(!allDates.length){
+  if(!lancs.length){
     if(info) info.innerHTML = '<span style="color:var(--mu)">Nenhum lançamento S2 registrado ainda (a partir de 01/07/2026).</span>';
     if(CHS['cCumulS2']) CHS['cCumulS2'].destroy();
     return;
   }
 
-  // Also add today if not present
-  const todayStr = TODAY.toISOString().split('T')[0];
-  if(!allDates.includes(todayStr)) allDates.push(todayStr);
-  allDates.sort();
+  // Monta lista de meses de Jul/2026 até o mês atual
+  const meses = [];
+  let cur = new Date('2026-07-01');
+  while(true){
+    const ym = cur.toISOString().substring(0,7);
+    meses.push(ym);
+    if(ym >= TODAY_YM) break;
+    cur.setMonth(cur.getMonth()+1);
+  }
 
   const FR_S2 = ['Resp','Rino'];
-  const FR_COLORS_S2 = { Resp:'#16a34a', Rino:'#0891b2' };
+  const FR_COLORS_S2 = { Resp:'#22c55e', Rino:'#06b6d4' };
 
-  // Cumulative per date per franquia
-  const cumul = {};
-  FR_S2.forEach(f=>{ cumul[f] = 0; });
+  // Valor por mês por franquia (não cumulativo ainda)
+  const porMes = {};
+  meses.forEach(ym=>{ porMes[ym] = { Resp:0, Rino:0 }; });
+  lancs.forEach(l=>{
+    const ym = l.data.substring(0,7);
+    if(porMes[ym] && l.fra && (l.fra==='Resp'||l.fra==='Rino')){
+      porMes[ym][l.fra] += l.val || 0;
+    }
+  });
 
-  const dateLabels = [];
+  // Acumula mês a mês
+  const cumul = { Resp:0, Rino:0 };
   const datasets = { Resp:[], Rino:[] };
+  const labels = [];
 
-  allDates.forEach(d=>{
-    const dayLancs = lancs.filter(l=>l.data===d);
-    FR_S2.forEach(f=>{
-      cumul[f] += dayLancs.filter(l=>l.fra===f).reduce((s,l)=>s+l.val,0);
-    });
-    // Short label
-    const parts = d.split('-');
-    dateLabels.push(parts[2]+'/'+parts[1]);
+  meses.forEach(ym=>{
+    FR_S2.forEach(f=>{ cumul[f] += porMes[ym][f]; });
+    const [ano, mes] = ym.split('-');
+    labels.push(MESES_PT[parseInt(mes,10)-1] + '/' + ano.slice(2));
     FR_S2.forEach(f=>{ datasets[f].push(cumul[f]); });
   });
 
   mk('cCumulS2','line',{
-    labels: dateLabels,
+    labels,
     datasets: FR_S2.map(f=>({
       label: f,
       data: datasets[f],
@@ -946,17 +955,17 @@ function buildCumulS2(){
       backgroundColor: FR_COLORS_S2[f]+'22',
       fill: true,
       tension: .35,
-      pointRadius: allDates.length < 15 ? 4 : 2,
+      pointRadius: 5,
       pointBackgroundColor: FR_COLORS_S2[f],
       borderWidth: 2.5,
     }))
   },{
     scales:{
-      x:{ ticks:{color:'#8890b0',font:{size:9},maxTicksLimit:10}, grid:{color:'#2d3154'} },
-      y:{ ticks:{color:'#8890b0',font:{size:9},callback:v=>f0(v)}, grid:{color:'#2d3154'}, beginAtZero:true }
+      x:{ ticks:{color:'#8890b0',font:{size:10}}, grid:{color:'#1e3a5f'} },
+      y:{ ticks:{color:'#8890b0',font:{size:9},callback:v=>f0(v)}, grid:{color:'#1e3a5f'}, beginAtZero:true }
     },
     plugins:{
-      legend:{ labels:{color:'#8890b0',font:{size:9},boxWidth:10} },
+      legend:{ labels:{color:'#c0cce0',font:{size:10},boxWidth:12} },
       tooltip:{ callbacks:{ label:c=>`${c.dataset.label}: ${f0(c.raw)}` } }
     }
   });
@@ -969,7 +978,7 @@ function buildCumulS2(){
       return `<div style="display:flex;align-items:center;gap:.4rem">
         <span style="width:10px;height:10px;border-radius:50%;background:${c};display:inline-block"></span>
         <span style="color:var(--mu)">${f}:</span>
-        <span style="font-weight:700;color:var(--wh)">${f0(cumul[f])}</span>
+        <span style="font-weight:700;color:${c}">${f0(cumul[f])}</span>
       </div>`;
     }).join('') +
     `<div style="display:flex;align-items:center;gap:.4rem;border-left:1px solid var(--bd);padding-left:1rem">
