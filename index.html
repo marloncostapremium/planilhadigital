@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://script.google.com https://script.googleusercontent.com https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://script.google.com https://script.googleusercontent.com https://cdnjs.cloudflare.com; connect-src *;">
 <title>Planilha Digital — Controle de Verba Regional 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -842,6 +843,8 @@ function unlockApp(){
   if(badge){ badge.style.background='#06b6d422'; badge.style.borderColor='#06b6d455'; badge.style.cursor='default'; badge.onclick=null; }
   if(lbl){ lbl.textContent='Desbloqueado'; lbl.style.color='#06b6d4'; }
   if(icon) icon.textContent='🔓';
+  // Carrega dados do Sheets após unlock
+  loadFromSheets();
   // Reveal blurred content in all pages
   document.querySelectorAll('.app-blur').forEach(el=>{
     el.style.filter='';
@@ -2333,28 +2336,31 @@ function jsonpRequest(url, params, timeoutMs){
     var cbName = '_gasCallback_' + Date.now() + '_' + Math.floor(Math.random()*9999);
     var timer = setTimeout(function(){
       cleanup();
-      reject(new Error('Timeout — servidor não respondeu em ' + (timeoutMs/1000) + 's'));
+      reject(new Error('Timeout — GAS não respondeu em ' + (timeoutMs/1000) + 's'));
     }, timeoutMs);
     function cleanup(){
       clearTimeout(timer);
       try{ delete window[cbName]; }catch(e){}
       var el = document.getElementById(cbName);
-      if(el) el.parentNode.removeChild(el);
+      if(el && el.parentNode) el.parentNode.removeChild(el);
     }
     window[cbName] = function(data){
       cleanup();
       resolve(data);
     };
-    var qs = 'callback=' + cbName;
-    if(params) qs += '&' + Object.entries(params)
-      .map(function(kv){ return kv[0]+'='+encodeURIComponent(String(kv[1]==null?'':kv[1])); })
-      .join('&');
+    var qs = 'callback=' + encodeURIComponent(cbName);
+    if(params){
+      Object.entries(params).forEach(function(kv){
+        qs += '&' + kv[0] + '=' + encodeURIComponent(String(kv[1]==null?'':kv[1]));
+      });
+    }
     var script = document.createElement('script');
-    script.id  = cbName;
-    script.src = url + '?' + qs;
+    script.id    = cbName;
+    script.async = true;
+    script.src   = url + '?' + qs;
     script.onerror = function(){
       cleanup();
-      reject(new Error('Erro ao carregar script JSONP'));
+      reject(new Error('Script JSONP falhou — verifique a URL do GAS'));
     };
     document.head.appendChild(script);
   });
@@ -2362,20 +2368,18 @@ function jsonpRequest(url, params, timeoutMs){
 
 async function loadFromSheets(silent=false){
   const _url = _DEFAULT_API;
-  if(!_url){ if(!silent) setBanner('⚠️ API não configurada.','#ba7517'); return; }
   API_URL = _url;
   if(!silent) setBanner('🔄 Carregando dados do servidor...','#185fa5');
 
-  // Usa JSONP para contornar CORS do Google Apps Script
   let json;
   try {
-    json = await jsonpRequest(_url, { action:'getAll' }, 20000);
+    json = await jsonpRequest(_url, {action:'getAll'}, 20000);
   } catch(netErr){
     const lblE = document.getElementById('apiBtnLabel');
     const icoE = document.getElementById('apiBtnIcon');
     if(lblE){ lblE.textContent='● erro'; lblE.style.color='#c62828'; }
     if(icoE) icoE.setAttribute('stroke','#c62828');
-    if(!silent) setBanner('❌ Falha na conexão: ' + netErr.message,'#c62828');
+    if(!silent) setBanner('❌ ' + netErr.message,'#c62828');
     return;
   }
 
@@ -2418,7 +2422,11 @@ async function gasRequest(params){
   const url = _DEFAULT_API;
   if(!url) return null;
   try {
-    return await jsonpRequest(url, params, 20000);
+    const qs = Object.entries(params)
+      .map(([k,v])=>k+'='+encodeURIComponent(String(v==null?'':v))).join('&');
+    const res = await fetch(url+'?'+qs, {method:'GET', redirect:'follow'});
+    const text = await res.text();
+    try{ return JSON.parse(text); }catch(e){ return {status:'ok'}; }
   } catch(e){
     console.error('gasRequest error:', e);
     return null;
