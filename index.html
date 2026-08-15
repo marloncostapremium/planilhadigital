@@ -2375,7 +2375,7 @@ async function loadFromSheets(silent=false){
 
   let json;
   try {
-    json = await jsonpRequest(_url, {action:'getAll'}, 20000);
+    json = await jsonpRequest(_url, {action:'getAll', sheet:'Lançamentos_S2'}, 20000);
   } catch(netErr){
     const lblE = document.getElementById('apiBtnLabel');
     const icoE = document.getElementById('apiBtnIcon');
