@@ -2336,17 +2336,21 @@ async function loadFromSheets(silent=false){
   API_URL = _url;
   if(!silent) setBanner('🔄 Carregando dados do servidor...','#185fa5');
 
-  // FASE 1: apenas fetch de rede — único ponto que deve gerar "Falha na conexão"
+  // FASE 1: apenas fetch de rede com timeout de 15s
   let text;
   try {
-    const res = await fetch(_url + '?action=getAll', { method:'GET', redirect:'follow' });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    const res = await fetch(_url + '?action=getAll', { method:'GET', redirect:'follow', signal: ctrl.signal });
+    clearTimeout(timer);
     text = await res.text();
   } catch(netErr){
     const lblE = document.getElementById('apiBtnLabel');
     const icoE = document.getElementById('apiBtnIcon');
     if(lblE){ lblE.textContent='● erro'; lblE.style.color='#c62828'; }
     if(icoE) icoE.setAttribute('stroke','#c62828');
-    if(!silent) setBanner('❌ Falha na conexão: ' + netErr.message,'#c62828');
+    const msg = netErr.name === 'AbortError' ? 'Timeout — servidor não respondeu em 15s' : netErr.message;
+    if(!silent) setBanner('❌ Falha na conexão: ' + msg,'#c62828');
     return;
   }
 
