@@ -2107,7 +2107,7 @@ function saveOrc(){
   localStorage.setItem('dupihub_budget', JSON.stringify(D.orc));
   buildAll();
   // Envia para Google Sheets
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
+  const url = _DEFAULT_API;
   if(url){
     const params = {
       action:'saveBudget',
@@ -2303,12 +2303,9 @@ function exportWord(){
 function exportPDF(){window.print();}
 
 // ── INTEGRAÇÃO GOOGLE SHEETS ──────────────────────────────────────────────────
-// Cole aqui a URL gerada pelo Google Apps Script após implantar:
+// URL correta do Google Apps Script — sempre forçada, ignora localStorage antigo
 const _DEFAULT_API = 'https://script.google.com/macros/s/AKfycbzQdKyM6skEoNBtZhB8q_z_gKEQiy7sHk4sxejdyGyAEn-G7p2MfO7KKd5kZgHS1Lzp/exec';
-// Sempre garante que a URL correta está salva no localStorage
-if(!localStorage.getItem('dupihub_api_url') || localStorage.getItem('dupihub_api_url').indexOf('AKfycbzQdKyM6sk') === -1){
-  localStorage.setItem('dupihub_api_url', _DEFAULT_API);
-}
+localStorage.setItem('dupihub_api_url', _DEFAULT_API);
 let API_URL = _DEFAULT_API;
 
 function setApiUrl(){
@@ -2364,7 +2361,7 @@ function jsonpRequest(url, params, timeoutMs){
 }
 
 async function loadFromSheets(silent=false){
-  const _url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
+  const _url = _DEFAULT_API;
   if(!_url){ if(!silent) setBanner('⚠️ API não configurada.','#ba7517'); return; }
   API_URL = _url;
   if(!silent) setBanner('🔄 Carregando dados do servidor...','#185fa5');
@@ -2418,7 +2415,7 @@ async function loadFromSheets(silent=false){
 // ── API GOOGLE SHEETS ────────────────────────────────────────────────────────
 // Usa GET com parâmetros individuais — mais confiável com Apps Script + Safari
 async function gasRequest(params){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
+  const url = _DEFAULT_API;
   if(!url) return null;
   try {
     return await jsonpRequest(url, params, 20000);
@@ -2429,7 +2426,7 @@ async function gasRequest(params){
 }
 
 async function apiAdd(lancamento){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
+  const url = _DEFAULT_API;
   if(!url){ setBanner('⚠️ API não configurada.','#ba7517'); return null; }
   API_URL = url;
 
@@ -2496,7 +2493,7 @@ async function apiEdit(id, lancamento){
 
 async function apiDelete(id){
   if(!id) return;
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
+  const url = _DEFAULT_API;
   if(!url) return;
   try {
     const json = await jsonpRequest(url, { action:'delete', id:id }, 15000);
@@ -2898,7 +2895,7 @@ function vgDayDetail(d){var ano=_vgCalAno,mes=_vgCalMes;var pad=function(n){retu
 
 // ── API VIAGENS ───────────────────────────────────────────────────────────────
 async function apiAddViagem(v){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
+  const url = _DEFAULT_API;
   if(!url) return;
   try {
     const params = {
@@ -2912,7 +2909,7 @@ async function apiAddViagem(v){
 }
 
 async function apiDeleteViagem(id){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
+  const url = _DEFAULT_API;
   if(!url || !id) return;
   try {
     await jsonpRequest(url, {action:'deleteViagem', id:id}, 15000);
@@ -2920,7 +2917,7 @@ async function apiDeleteViagem(id){
 }
 
 async function loadViagensFromSheets(){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
+  const url = _DEFAULT_API;
   if(!url) return;
   try {
     setBanner('🔄 Carregando viagens...','#185fa5');
