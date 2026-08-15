@@ -2117,8 +2117,7 @@ function saveOrc(){
       gastro:D.orc.Gastro
     };
     const qs = Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-    fetch(url+'?'+qs,{method:'GET',redirect:'follow'})
-      .then(r=>r.text())
+    jsonpRequest(url, params, 15000)
       .then(()=>setBanner('✅ Budget salvo no Google Sheets!','#1d9e75'))
       .catch(()=>setBanner('✅ Budget atualizado localmente!','#1d9e75'));
   } else {
@@ -2330,38 +2329,60 @@ function setBanner(msg, color){
 }
 
 // Carrega todos os lançamentos do Google Sheets ao abrir
+// ── JSONP — contorna CORS do Google Apps Script ──────────────────────────────
+function jsonpRequest(url, params, timeoutMs){
+  timeoutMs = timeoutMs || 20000;
+  return new Promise(function(resolve, reject){
+    var cbName = '_gasCallback_' + Date.now() + '_' + Math.floor(Math.random()*9999);
+    var timer = setTimeout(function(){
+      cleanup();
+      reject(new Error('Timeout — servidor não respondeu em ' + (timeoutMs/1000) + 's'));
+    }, timeoutMs);
+    function cleanup(){
+      clearTimeout(timer);
+      try{ delete window[cbName]; }catch(e){}
+      var el = document.getElementById(cbName);
+      if(el) el.parentNode.removeChild(el);
+    }
+    window[cbName] = function(data){
+      cleanup();
+      resolve(data);
+    };
+    var qs = 'callback=' + cbName;
+    if(params) qs += '&' + Object.entries(params)
+      .map(function(kv){ return kv[0]+'='+encodeURIComponent(String(kv[1]==null?'':kv[1])); })
+      .join('&');
+    var script = document.createElement('script');
+    script.id  = cbName;
+    script.src = url + '?' + qs;
+    script.onerror = function(){
+      cleanup();
+      reject(new Error('Erro ao carregar script JSONP'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
 async function loadFromSheets(silent=false){
   const _url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
   if(!_url){ if(!silent) setBanner('⚠️ API não configurada.','#ba7517'); return; }
   API_URL = _url;
   if(!silent) setBanner('🔄 Carregando dados do servidor...','#185fa5');
 
-  // FASE 1: apenas fetch de rede com timeout de 15s
-  let text;
+  // Usa JSONP para contornar CORS do Google Apps Script
+  let json;
   try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 15000);
-    const res = await fetch(_url + '?action=getAll', { method:'GET', redirect:'follow', signal: ctrl.signal });
-    clearTimeout(timer);
-    text = await res.text();
+    json = await jsonpRequest(_url, { action:'getAll' }, 20000);
   } catch(netErr){
     const lblE = document.getElementById('apiBtnLabel');
     const icoE = document.getElementById('apiBtnIcon');
     if(lblE){ lblE.textContent='● erro'; lblE.style.color='#c62828'; }
     if(icoE) icoE.setAttribute('stroke','#c62828');
-    const msg = netErr.name === 'AbortError' ? 'Timeout — servidor não respondeu em 15s' : netErr.message;
-    if(!silent) setBanner('❌ Falha na conexão: ' + msg,'#c62828');
+    if(!silent) setBanner('❌ Falha na conexão: ' + netErr.message,'#c62828');
     return;
   }
 
-  // FASE 2: parse JSON
-  let json;
-  try { json = JSON.parse(text); } catch(pe){
-    if(!silent) setBanner('❌ Resposta inválida da API.','#c62828');
-    return;
-  }
-
-  // FASE 3: processamento dos dados
+  // Processamento dos dados
   const rows = Array.isArray(json) ? json : (json.data || []);
   if(silent) _deletedIds.clear();
   D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, -1); });
@@ -2374,13 +2395,12 @@ async function loadFromSheets(silent=false){
         dataStr = yy+'-'+mm+'-'+dd;
       }
       if(dataStr.length > 10 && dataStr[10] === ' ') dataStr = dataStr.substring(0,10);
-      // Descarta datas que não são YYYY-MM-DD válido
       if(!dataStr.match(/^\d{4}-\d{2}-\d{2}$/)) dataStr = '';
       return {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
     });
   D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); });
 
-  // Badge online — só chega aqui se fetch e parse deram certo
+  // Badge online
   const lbl = document.getElementById('apiBtnLabel');
   const ico = document.getElementById('apiBtnIcon');
   if(lbl){ lbl.textContent='● online'; lbl.style.color='#1d9e75'; }
@@ -2390,7 +2410,6 @@ async function loadFromSheets(silent=false){
     setTimeout(()=>setBanner('',''), 3000);
   }
 
-  // FASE 4: render de UI — erros aqui vão pro console, não afetam o badge de conexão
   try{ renderLanc(); }catch(re){ console.error('renderLanc error:',re); }
   try{ buildAll(); }catch(be){ console.error('buildAll error:',be); }
 }
@@ -2402,13 +2421,7 @@ async function gasRequest(params){
   const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
   if(!url) return null;
   try {
-    const qs = Object.entries(params)
-      .map(([k,v])=> k+'='+encodeURIComponent(String(v===null||v===undefined?'':v)))
-      .join('&');
-    const fullUrl = url + '?' + qs;
-    const res = await fetch(fullUrl, { method:'GET', redirect:'follow' });
-    const text = await res.text();
-    try{ return JSON.parse(text); }catch(e){ return {status:'ok'}; }
+    return await jsonpRequest(url, params, 20000);
   } catch(e){
     console.error('gasRequest error:', e);
     return null;
@@ -2446,11 +2459,7 @@ async function apiAdd(lancamento){
   setBanner('🔄 Enviando para Google Sheets...','#185fa5');
 
   try {
-    // Mesma abordagem do gasRequest que funciona — sem mode:'cors'
-    const res  = await fetch(fullUrl, { method:'GET', redirect:'follow' });
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); } catch(e) {}
+    const json = await jsonpRequest(url, params, 20000);
     if(json && json.status === 'ok'){
       setBanner('✅ Salvo no Google Sheets!','#1d9e75');
       setTimeout(()=>setBanner('',''), 3000);
@@ -2460,25 +2469,7 @@ async function apiAdd(lancamento){
       return localId;
     }
   } catch(err){
-    // Fallback: XMLHttpRequest (Safari mais antigo)
-    try {
-      const xhrText = await new Promise((res, rej)=>{
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', fullUrl);
-        xhr.onload  = ()=> res(xhr.responseText);
-        xhr.onerror = ()=> rej(new Error('XHR falhou'));
-        xhr.send();
-      });
-      let json2;
-      try { json2 = JSON.parse(xhrText); } catch(e) {}
-      if(json2 && json2.status === 'ok'){
-        setBanner('✅ Salvo no Google Sheets!','#1d9e75');
-        setTimeout(()=>setBanner('',''), 3000);
-        return json2.id || localId;
-      }
-    } catch(err2){
-      setBanner('❌ Erro de conexão: ' + err2.message,'#c62828');
-    }
+    setBanner('❌ Erro de conexão: ' + err.message,'#c62828');
     return localId;
   }
 }
@@ -2508,10 +2499,7 @@ async function apiDelete(id){
   const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
   if(!url) return;
   try {
-    const fullUrl = url + '?action=delete&id=' + encodeURIComponent(id);
-    const res = await fetch(fullUrl, { method:'GET', redirect:'follow' });
-    const text = await res.text();
-    let json; try{ json=JSON.parse(text); }catch(e){}
+    const json = await jsonpRequest(url, { action:'delete', id:id }, 15000);
     if(json && json.status==='ok'){
       setBanner('✅ Excluído do Google Sheets!','#1d9e75');
       setTimeout(()=>setBanner('',''),2500);
@@ -2919,7 +2907,7 @@ async function apiAddViagem(v){
       cidade:v.cidade||'', tipo:v.tipo||'', ausencia:v.ausencia||'', obs:v.obs||''
     };
     const qs = Object.entries(params).map(([k,v2])=>k+'='+encodeURIComponent(String(v2||''))).join('&');
-    await fetch(url+'?'+qs, {method:'GET', redirect:'follow'});
+    await jsonpRequest(url, vParams, 15000);
   } catch(e){ console.error('apiAddViagem error:', e); }
 }
 
@@ -2927,7 +2915,7 @@ async function apiDeleteViagem(id){
   const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
   if(!url || !id) return;
   try {
-    await fetch(url+'?action=deleteViagem&id='+encodeURIComponent(id), {method:'GET', redirect:'follow'});
+    await jsonpRequest(url, {action:'deleteViagem', id:id}, 15000);
   } catch(e){ console.error('apiDeleteViagem error:', e); }
 }
 
@@ -2936,11 +2924,8 @@ async function loadViagensFromSheets(){
   if(!url) return;
   try {
     setBanner('🔄 Carregando viagens...','#185fa5');
-    const res  = await fetch(url+'?action=getAllViagens', {method:'GET', redirect:'follow', mode:'cors'});
-    const text = await res.text();
-    let json; try{ json=JSON.parse(text); }catch(e){ return; }
+    const json = await jsonpRequest(url, { action:'getAllViagens' }, 20000);
     if(json && json.status==='ok' && Array.isArray(json.data) && json.data.length > 0){
-      // Merge: keep local viagens not yet on server + server viagens
       const serverIds = new Set(json.data.map(v=>v.id));
       const localOnly = VIAGENS.filter(v => !serverIds.has(v.id));
       VIAGENS = [...json.data, ...localOnly];
