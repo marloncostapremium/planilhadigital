@@ -2335,54 +2335,60 @@ async function loadFromSheets(silent=false){
   if(!_url){ if(!silent) setBanner('⚠️ API não configurada.','#ba7517'); return; }
   API_URL = _url;
   if(!silent) setBanner('🔄 Carregando dados do servidor...','#185fa5');
+
+  // FASE 1: apenas fetch de rede — único ponto que deve gerar "Falha na conexão"
+  let text;
   try {
-    const res  = await fetch(_url + '?action=getAll', { method:'GET', redirect:'follow' });
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); } catch(pe){
-      if(!silent) setBanner('❌ Resposta inválida da API.','#c62828');
-      return;
-    }
-    const rows = Array.isArray(json) ? json : (json.data || []);
-      // Em sync automático/silencioso: limpa IDs deletados localmente
-    // para refletir exclusões feitas diretamente no Google Sheets
-    if(silent) _deletedIds.clear();
-    // Reverte totais anteriores
-    D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, -1); });
-    // Filtra e sanitiza — respeita exclusões locais desta sessão
-    D.sess = rows
-      .filter(l => l && l.cons && !_deletedIds.has(String(l.id||'')))
-      .map(l => {
-        // Normalize data field — ensure YYYY-MM-DD format
-        let dataStr = String(l.data||'').trim();
-        // If date came as DD/MM/YYYY convert to YYYY-MM-DD
-        if(dataStr.match(/^\d{2}\/\d{2}\/\d{4}$/)){
-          const [dd,mm,yy] = dataStr.split('/');
-          dataStr = yy+'-'+mm+'-'+dd;
-        }
-        // Remove time part if present (e.g. "2026-04-15 00:00:00")
-        if(dataStr.length > 10 && dataStr[10] === ' ') dataStr = dataStr.substring(0,10);
-        return {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
-      });
-    // Aplica totais novos
-    D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); });
-    renderLanc(); buildAll();
-    // Update API status indicator
-    const lbl = document.getElementById('apiBtnLabel');
-    const ico = document.getElementById('apiBtnIcon');
-    if(lbl){ lbl.textContent='● online'; lbl.style.color='#1d9e75'; }
-    if(ico) ico.setAttribute('stroke','#1d9e75');
-    if(!silent){
-      setBanner('✅ ' + D.sess.length + ' lançamento(s) sincronizado(s).','#1d9e75');
-      setTimeout(()=>setBanner('',''), 3000);
-    }
-  } catch(e){
+    const res = await fetch(_url + '?action=getAll', { method:'GET', redirect:'follow' });
+    text = await res.text();
+  } catch(netErr){
     const lblE = document.getElementById('apiBtnLabel');
     const icoE = document.getElementById('apiBtnIcon');
     if(lblE){ lblE.textContent='● erro'; lblE.style.color='#c62828'; }
     if(icoE) icoE.setAttribute('stroke','#c62828');
-    if(!silent) setBanner('❌ Falha na conexão: ' + e.message,'#c62828');
+    if(!silent) setBanner('❌ Falha na conexão: ' + netErr.message,'#c62828');
+    return;
   }
+
+  // FASE 2: parse JSON
+  let json;
+  try { json = JSON.parse(text); } catch(pe){
+    if(!silent) setBanner('❌ Resposta inválida da API.','#c62828');
+    return;
+  }
+
+  // FASE 3: processamento dos dados
+  const rows = Array.isArray(json) ? json : (json.data || []);
+  if(silent) _deletedIds.clear();
+  D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, -1); });
+  D.sess = rows
+    .filter(l => l && l.cons && !_deletedIds.has(String(l.id||'')))
+    .map(l => {
+      let dataStr = String(l.data||'').trim();
+      if(dataStr.match(/^\d{2}\/\d{2}\/\d{4}$/)){
+        const [dd,mm,yy] = dataStr.split('/');
+        dataStr = yy+'-'+mm+'-'+dd;
+      }
+      if(dataStr.length > 10 && dataStr[10] === ' ') dataStr = dataStr.substring(0,10);
+      // Descarta datas que não são YYYY-MM-DD válido
+      if(!dataStr.match(/^\d{4}-\d{2}-\d{2}$/)) dataStr = '';
+      return {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
+    });
+  D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1); });
+
+  // Badge online — só chega aqui se fetch e parse deram certo
+  const lbl = document.getElementById('apiBtnLabel');
+  const ico = document.getElementById('apiBtnIcon');
+  if(lbl){ lbl.textContent='● online'; lbl.style.color='#1d9e75'; }
+  if(ico) ico.setAttribute('stroke','#1d9e75');
+  if(!silent){
+    setBanner('✅ ' + D.sess.length + ' lançamento(s) sincronizado(s).','#1d9e75');
+    setTimeout(()=>setBanner('',''), 3000);
+  }
+
+  // FASE 4: render de UI — erros aqui vão pro console, não afetam o badge de conexão
+  try{ renderLanc(); }catch(re){ console.error('renderLanc error:',re); }
+  try{ buildAll(); }catch(be){ console.error('buildAll error:',be); }
 }
 
 // Envia novo lançamento para o Google Sheets
