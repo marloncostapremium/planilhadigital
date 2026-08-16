@@ -2648,7 +2648,7 @@ function calcDiasViag(){
     diasEl.value = '';
     return;
   }
-  const diff = Math.round((d2 - d1) / (1000*60*60*24)) + 1;
+  const diff = Math.round((d2 - d1) / (1000*60*60*24));
   diasEl.value = diff;
 }
 
@@ -2925,16 +2925,47 @@ async function loadViagensFromSheets(){
   const url = _DEFAULT_API;
   if(!url) return;
   try {
-    setBanner('🔄 Carregando viagens...','#185fa5');
     const json = await jsonpRequest(url, { action:'getAllViagens' }, 20000);
     if(json && json.status==='ok' && Array.isArray(json.data) && json.data.length > 0){
-      const serverIds = new Set(json.data.map(v=>v.id));
+      // Normaliza datas — o GAS pode retornar "Qui 06" ou "YYYY-MM-DD"
+      const MESES_MAP = {
+        'Janeiro':1,'Fevereiro':2,'Março':3,'Abril':4,'Maio':5,'Junho':6,
+        'Julho':7,'Agosto':8,'Setembro':9,'Outubro':10,'Novembro':11,'Dezembro':12
+      };
+      const normalized = json.data.map(v => {
+        let ida = v.ida || '';
+        let ret = v.ret || '';
+        // Se veio como "Qui 06" ou "Sex 07" — reconstruir com o mês do campo mes
+        const parseDiaSemana = (s, mesStr) => {
+          const m = String(s).trim().match(/^[A-Za-zÀ-ú]{3}\s+(\d{1,2})$/);
+          if(m && mesStr){
+            const mn = MESES_MAP[mesStr];
+            if(mn){
+              const ano = new Date().getFullYear();
+              const dd = String(m[1]).padStart(2,'0');
+              const mm = String(mn).padStart(2,'0');
+              return ano + '-' + mm + '-' + dd;
+            }
+          }
+          // Já está em YYYY-MM-DD
+          if(String(s).match(/^\d{4}-\d{2}-\d{2}$/)) return s;
+          return '';
+        };
+        ida = parseDiaSemana(ida, v.mes) || ida;
+        ret = parseDiaSemana(ret, v.mes) || ret;
+        // Recalcular dias corretamente (sem +1)
+        let dias = parseInt(v.dias) || 0;
+        if(ida && ret && ida.match(/^\d{4}-\d{2}-\d{2}$/) && ret.match(/^\d{4}-\d{2}-\d{2}$/)){
+          const d1 = new Date(ida+'T12:00:00');
+          const d2 = new Date(ret+'T12:00:00');
+          dias = Math.round((d2-d1)/(1000*60*60*24));
+        }
+        return {...v, ida, ret, dias};
+      });
+      const serverIds = new Set(normalized.map(v=>v.id));
       const localOnly = VIAGENS.filter(v => !serverIds.has(v.id));
-      VIAGENS = [...json.data, ...localOnly];
+      VIAGENS = [...normalized, ...localOnly];
       localStorage.setItem('dupihub_viagens', JSON.stringify(VIAGENS));
-      setBanner('✅ '+VIAGENS.length+' viagem(ns) carregada(s).','#1d9e75');
-    } else {
-      setBanner('','#1d9e75');
     }
     renderViagemTabela();
     renderViagemCal();
