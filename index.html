@@ -183,7 +183,7 @@ footer strong{color:var(--cyan)}
   <!-- CONSUMO CUMULATIVO S2 -->
   <div class="stit" style="margin-top:1.5rem">Consumo Cumulativo S2 — Acumulado Mensal (Jul/2026 em diante)</div>
   <div class="cc" style="margin-bottom:1rem">
-    <div class="ct">Total acumulado por mês — Resp &amp; Rino · Lançamentos_S2 (todos os tipos)</div>
+    <div class="ct">Total acumulado de RN por mês — Resp &amp; Rino · Lançamentos_S2</div>
     <div style="height:240px"><canvas id="cCumulS2"></canvas></div>
     <div id="cumulS2Info" style="display:flex;gap:1.5rem;margin-top:.6rem;flex-wrap:wrap;font-size:.75rem"></div>
   </div>
@@ -895,10 +895,12 @@ function buildCumulS2(){
 
   const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-  // Filtra TODOS os lançamentos S2 (qualquer tipo) a partir de Jul/2026
+  // Filtra apenas RN (Almoço, Jantar, Café) a partir de Jul/2026
+  const RN_TIPOS = ['Almoço','Jantar','Café','Refeição de Negócios (RN)'];
   const lancs = allLancs().filter(l=>{
     if(!l.data || typeof l.data !== 'string') return false;
-    const ym = l.data.substring(0,7); // "YYYY-MM"
+    if(!RN_TIPOS.includes(l.tipo)) return false;
+    const ym = l.data.substring(0,7);
     if(ym.length < 7 || !ym.match(/^\d{4}-\d{2}$/)) return false;
     return ym >= S2_START_YM && ym <= TODAY_YM;
   });
@@ -2159,6 +2161,8 @@ function showPage(id,btn){
     const r=document.getElementById('vp-reg'); if(r) r.style.display='block';
     document.querySelectorAll('.vnb').forEach(b=>b.classList.remove('on'));
     const vb=document.getElementById('vtab-reg'); if(vb) vb.classList.add('on');
+    // Carrega viagens do Sheets ao abrir a aba
+    loadViagensFromSheets();
   }
   setTimeout(buildAll,60);
 }
