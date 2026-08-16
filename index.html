@@ -315,8 +315,7 @@ footer strong{color:var(--cyan)}
         <option>Verba Marketing Congresso</option>
         <option>Verba Cross</option>
       </select></div>
-    <div><label>Médico Engajado <span style="color:#c62828">*</span></label>
-      <input type="text" id="e-med" placeholder="Nome do médico"></div>
+    <div style="display:none"><input type="hidden" id="e-med" value=""></div>
     <div><label>Mês <span style="color:#c62828">*</span></label>
       <select id="e-mes" onchange="autoDate('e-dat','e-mes')"><option value="">Selecione...</option>
         <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
@@ -338,21 +337,19 @@ footer strong{color:var(--cyan)}
   <div class="ef">
     <div><label>Gerente Regional <span style="color:#c62828">*</span></label>
       <select id="ev-ger"><option value="">Selecione...</option>
-        <option>Marlon Costa</option><option>Carla Moraes</option><option>Jefferson Souza</option>
-        <option>José Júnior</option><option>Emerson Silva</option><option>Alexandre Poças</option>
+        <option>Marlon Costa</option>
       </select></div>
     <div><label>Consultor (CSA) <span style="color:#c62828">*</span></label>
       <select id="ev-cons"><option value="">Selecione...</option>
-        <option>Regional</option>
-        <option>Angélica Silva</option><option>Elaíne Azevedo</option><option>Tassia Novais</option>
-        <option>Silvia Cunha</option><option>Greice Morais</option><option>Caroline Pereira</option>
-        <option>Vagner Elias</option><option>Eduardo Reis</option><option>Eduardo de Deus</option>
-        <option>Rafaela Correa</option><option>Dayane Olivieri</option>
+        <option>Angélica Silva</option><option>Cassandra Andrade</option><option>Elaíne Azevedo</option>
+        <option>Fabiano Cortez</option><option>Francisco Neto</option><option>Joanna Macedo</option>
+        <option>Mariana Costa</option><option>Silvia Cunha</option><option>Fernando Maia</option>
+        <option>Marco Rocha</option><option>Rafaela Correa</option><option>Saulo Guedes</option>
+        <option>Thiago Martins</option>
       </select></div>
     <div><label>Indicação <span style="color:#c62828">*</span></label>
       <select id="ev-ind" onchange="autoFraEv()"><option value="">Selecione...</option>
-        <option>Asma</option><option>DPOC</option><option>DA</option>
-        <option>PN</option><option>UCE</option><option>EoE</option><option>NP</option>
+        <option>Asma</option><option>DPOC</option><option>RSCcPN</option><option>RFSA</option>
       </select></div>
     <div><label>Franquia <span style="color:#1d9e75;font-size:.68rem">(auto)</span></label>
       <select id="ev-fra"><option value="">— automático —</option>
@@ -360,7 +357,7 @@ footer strong{color:var(--cyan)}
       </select></div>
     <div><label>Status <span style="color:#c62828">*</span></label>
       <select id="ev-sts" onchange="onEvSts()"><option value="">Selecione...</option>
-        <option>Planejado</option><option>Pago</option><option>Adiado</option><option>Cancelado</option>
+        <option>Planejado</option><option>Pago</option>
       </select></div>
     <div><label>Tipo de Investimento <span style="color:#c62828">*</span></label>
       <select id="ev-tipo" onchange="onEvTipo()"><option value="">Selecione...</option>
@@ -369,9 +366,9 @@ footer strong{color:var(--cyan)}
       </select></div>
     <div><label>Tipo de Apoio</label>
       <select id="ev-tap"><option value="">Selecione...</option>
-        <option>Jornada Regional</option><option>Congresso Local</option><option>Type 2 Dive</option>
+        <option>Jornada Regional</option><option>Congresso Local</option>
         <option>Evento Prestador</option><option>Cota Patrocínio</option><option>Simpósio Sociedade</option>
-        <option>Simpósio Prestador</option><option>Type 2 Ped</option>
+        <option>Simpósio Prestador</option><option>Conecta Ped</option>
         <option>Evento Sociedade</option><option>Jornada Itinerante</option>
         <option>Aula Mensal Sociedade</option><option>Outros</option>
       </select></div>
@@ -382,8 +379,7 @@ footer strong{color:var(--cyan)}
         <option>GASTRO-RJ</option><option>GASTRO-ES</option><option>SBP-RJ</option><option>SBP-ES</option>
         <option>OUTRAS</option>
       </select></div>
-    <div><label>Nome do Prestador</label>
-      <input type="text" id="ev-prest" placeholder="Nome do prestador" disabled style="opacity:.35;cursor:not-allowed"></div>
+    <div style="display:none"><input type="hidden" id="ev-prest" value=""></div>
     <div><label>Qtd de HCPs</label>
       <select id="ev-hcps" disabled style="opacity:.35;cursor:not-allowed"><option value="">—</option>
         <option>5</option><option>6</option><option>7</option><option>8</option><option>9</option>
@@ -404,8 +400,7 @@ footer strong{color:var(--cyan)}
         <option>Verba Marketing Congresso</option>
         <option>Verba Cross</option>
       </select></div>
-    <div><label>Médico Engajado</label>
-      <input type="text" id="ev-med" placeholder="Nome do médico"></div>
+    <div style="display:none"><input type="hidden" id="ev-med" value=""></div>
     <div><label>Mês <span style="color:#c62828">*</span></label>
       <select id="ev-mes" onchange="autoDate('ev-dat','ev-mes')"><option value="">Selecione...</option>
         <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
@@ -1907,7 +1902,7 @@ function addLanc(){
   if(!ind){showError('Selecione a Indicação.');return}
   if(!fra){showError('Selecione a Franquia.');return}
   if(!tipo){showError('Selecione o Tipo de RN (Almoço, Jantar ou Café).');return}
-  if(!medico){showError('⚕️ Informe o Médico Engajado — obrigatório para RN.');document.getElementById('e-med').focus();return}
+  // médico não é mais obrigatório
   if(!mes){showError('Selecione o Mês.');return}
   if(!data){showError('Informe a Data do lançamento.');document.getElementById('e-dat').focus();return}
   if(!val){showError('Informe o Valor Investido.');return}
