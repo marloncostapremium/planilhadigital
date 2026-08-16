@@ -714,21 +714,6 @@ footer strong{color:var(--cyan)}
     </div>
   </div>
 
-  <!-- LISTA DE VIAGENS -->
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin:1.2rem 0 .6rem">
-    <div class="stit" style="margin:0">Viagens Registradas</div>
-    <span id="vg-count" style="font-size:.72rem;color:var(--mu)"></span>
-  </div>
-  <div class="cc" style="overflow-x:auto;margin-bottom:1.5rem">
-    <table class="dt">
-      <thead><tr>
-        <th>Consultor</th><th>Gerente</th><th>Tipo</th><th>Ausência</th>
-        <th>IDA</th><th>Retorno</th><th>Dias</th><th>UF</th><th>Cidade</th><th>Obs</th><th>Ações</th>
-      </tr></thead>
-      <tbody id="vg-tbody"></tbody>
-    </table>
-  </div>
-
   <!-- BLOCO 2: CALENDÁRIO -->
   <div class="stit">Calendário de Viagens</div>
   <div class="cc" style="padding:1rem">
@@ -921,7 +906,7 @@ function buildCumulS2(){
 
   const S2_START_YM = '2026-07'; // a partir de julho/2026
   const TODAY = new Date();
-  const TODAY_YM = TODAY.toISOString().substring(0,7); // "YYYY-MM"
+  const TODAY_YM = TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0'); // local YYYY-MM
 
   const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -941,14 +926,15 @@ function buildCumulS2(){
     return;
   }
 
-  // Monta lista de meses de Jul/2026 até o mês atual
+  // Monta lista de meses de Jul/2026 até o mês atual (data local, sem UTC)
   const meses = [];
-  let cur = new Date('2026-07-01');
-  while(true){
-    const ym = cur.toISOString().substring(0,7);
+  let curY = 2026, curM = 7; // Jul=7
+  const [todayY, todayM] = TODAY_YM.split('-').map(Number);
+  while(curY < todayY || (curY === todayY && curM <= todayM)){
+    const ym = curY + '-' + String(curM).padStart(2,'0');
     meses.push(ym);
-    if(ym >= TODAY_YM) break;
-    cur.setMonth(cur.getMonth()+1);
+    curM++;
+    if(curM > 12){ curM = 1; curY++; }
   }
 
   const FR_S2 = ['Resp','Rino'];
