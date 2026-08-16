@@ -2927,43 +2927,26 @@ async function loadViagensFromSheets(){
   try {
     const json = await jsonpRequest(url, { action:'getAllViagens' }, 20000);
     if(json && json.status==='ok' && Array.isArray(json.data) && json.data.length > 0){
-      // Normaliza datas — o GAS pode retornar "Qui 06" ou "YYYY-MM-DD"
-      const MESES_MAP = {
-        'Janeiro':1,'Fevereiro':2,'Março':3,'Abril':4,'Maio':5,'Junho':6,
-        'Julho':7,'Agosto':8,'Setembro':9,'Outubro':10,'Novembro':11,'Dezembro':12
-      };
       const normalized = json.data.map(v => {
-        let ida = v.ida || '';
-        let ret = v.ret || '';
-        // Se veio como "Qui 06" ou "Sex 07" — reconstruir com o mês do campo mes
-        const parseDiaSemana = (s, mesStr) => {
-          const m = String(s).trim().match(/^[A-Za-zÀ-ú]{3}\s+(\d{1,2})$/);
-          if(m && mesStr){
-            const mn = MESES_MAP[mesStr];
-            if(mn){
-              const ano = new Date().getFullYear();
-              const dd = String(m[1]).padStart(2,'0');
-              const mm = String(mn).padStart(2,'0');
-              return ano + '-' + mm + '-' + dd;
-            }
-          }
-          // Já está em YYYY-MM-DD
-          if(String(s).match(/^\d{4}-\d{2}-\d{2}$/)) return s;
+        // Garante datas em YYYY-MM-DD
+        const fixDate = s => {
+          s = String(s||'').trim();
+          if(s.match(/^\d{4}-\d{2}-\d{2}$/)) return s;
           return '';
         };
-        ida = parseDiaSemana(ida, v.mes) || ida;
-        ret = parseDiaSemana(ret, v.mes) || ret;
-        // Recalcular dias corretamente (sem +1)
+        const ida = fixDate(v.ida);
+        const ret = fixDate(v.ret);
+        // Recalcula dias sem +1
         let dias = parseInt(v.dias) || 0;
-        if(ida && ret && ida.match(/^\d{4}-\d{2}-\d{2}$/) && ret.match(/^\d{4}-\d{2}-\d{2}$/)){
+        if(ida && ret){
           const d1 = new Date(ida+'T12:00:00');
           const d2 = new Date(ret+'T12:00:00');
           dias = Math.round((d2-d1)/(1000*60*60*24));
         }
         return {...v, ida, ret, dias};
       });
-      const serverIds = new Set(normalized.map(v=>v.id));
-      const localOnly = VIAGENS.filter(v => !serverIds.has(v.id));
+      const serverIds = new Set(normalized.map(v=>String(v.id)));
+      const localOnly = VIAGENS.filter(v => !serverIds.has(String(v.id)));
       VIAGENS = [...normalized, ...localOnly];
       localStorage.setItem('dupihub_viagens', JSON.stringify(VIAGENS));
     }
