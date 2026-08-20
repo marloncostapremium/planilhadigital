@@ -2431,7 +2431,7 @@ async function loadFromSheets(silent=false){
 
   // Processamento dos dados
   const rows = Array.isArray(json) ? json : (json.data || []);
-  if(silent) _deletedIds.clear();
+  // _deletedIds nunca é limpo automaticamente — só via resetSessao()
   D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, -1); });
   D.sess = rows
     .filter(l => l && l.cons && !_deletedIds.has(String(l.id||'')))
@@ -2550,7 +2550,7 @@ async function apiDelete(id){
   const url = _DEFAULT_API;
   if(!url) return;
   try {
-    const json = await jsonpRequest(url, { action:'delete', id:id }, 15000);
+    const json = await jsonpRequest(url, { action:'delete', id:id, sheet:'Lançamentos_S2' }, 15000);
     if(json && json.status==='ok'){
       setBanner('✅ Excluído do Google Sheets!','#1d9e75');
       setTimeout(()=>setBanner('',''),2500);
