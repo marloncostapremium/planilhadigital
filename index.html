@@ -822,7 +822,7 @@ const SC = {Planejado:'#185fa5',Pago:'#1d9e75',Adiado:'#ba7517',Cancelado:'#c628
 const f0 = v => { const n=parseFloat(v)||0; return 'R$ '+(n>=1000?(n/1000).toFixed(1)+'k':n.toFixed(0)); };
 const f2 = v => 'R$ '+(parseFloat(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fp = v => (v*100).toFixed(1)+'%';
-const mesToQ = m => { const i=MF.indexOf(m); return i<=2?0:i<=5?1:i<=8?2:3; };
+const mesToQ = m => { const i=MF.indexOf(m); if(i<0) return -1; return i<=2?0:i<=5?1:i<=8?2:3; };
 // IDs excluídos nesta sessão - evita recarregar do Sheets após exclusão
 const _deletedIds = new Set();
 
@@ -1895,11 +1895,13 @@ function updateTotals(fra, cons, mes, val, status, signal, verba){
   // Atualiza monthly
   const MF = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const mi = MF.indexOf(mes);
-  if(mi>=0) D.monthly[fra][mi] = (D.monthly[fra][mi]||0) + s*val;
-  // Atualiza quarters
+  if(mi>=0 && D.monthly[fra]) D.monthly[fra][mi] = (D.monthly[fra][mi]||0) + s*val;
+  // Atualiza quarters — protege contra fra inexistente e qi inválido
   const qi = mesToQ(mes);
-  if(isPago) D.qtr.pago[fra][qi] = (D.qtr.pago[fra][qi]||0) + s*val;
-  else       D.qtr.plan[fra][qi] = (D.qtr.plan[fra][qi]||0) + s*val;
+  if(qi >= 0 && qi <= 3){
+    if(isPago  && D.qtr.pago[fra]) D.qtr.pago[fra][qi] = (D.qtr.pago[fra][qi]||0) + s*val;
+    if(!isPago && D.qtr.plan[fra]) D.qtr.plan[fra][qi] = (D.qtr.plan[fra][qi]||0) + s*val;
+  }
 }
 
 function addEvento(){
