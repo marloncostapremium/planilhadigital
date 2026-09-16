@@ -344,8 +344,7 @@ footer strong{color:var(--cyan)}
         <option>Verba Marketing Congresso</option>
         <option>Verba Cross</option>
       </select></div>
-    <div><label>Médico Engajado <span style="color:#c62828">*</span></label>
-      <input type="text" id="e-med" placeholder="Nome do médico"></div>
+    <div style="display:none"><input type="hidden" id="e-med" value=""></div>
     <div><label>Mês <span style="color:#c62828">*</span></label>
       <select id="e-mes" onchange="autoDate('e-dat','e-mes')"><option value="">Selecione...</option>
         <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
@@ -433,7 +432,7 @@ footer strong{color:var(--cyan)}
         <option>Verba Cross</option>
       </select></div>
     <div><label>Médico Engajado</label>
-      <input type="text" id="ev-med" placeholder="Nome do médico"></div>
+      <input type="text" id="ev-med" ></div>
     <div><label>Mês <span style="color:#c62828">*</span></label>
       <select id="ev-mes" onchange="autoDate('ev-dat','ev-mes')"><option value="">Selecione...</option>
         <option>Janeiro</option><option>Fevereiro</option><option>Março</option><option>Abril</option>
@@ -521,7 +520,7 @@ footer strong{color:var(--cyan)}
       <thead><tr>
         <th>Consultor</th><th>Indicação</th><th>Franquia</th>
         <th>Tipo</th><th>Prestador/Soc</th>
-        <th>Médico</th><th>Status</th><th>Mês</th>
+        <th>Status</th><th>Mês</th>
         <th class="nr">Valor (R$)</th><th>Ações</th>
       </tr></thead>
       <tbody id="tLancBody"></tbody>
@@ -1115,10 +1114,11 @@ function buildCalendar(){
 
     // Cores por consultor
     const CC = {
-      'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Tassia Novais':'#f59e0b',
-      'Silvia Cunha':'#ef4444','Greice Morais':'#a855f7','Caroline Pereira':'#ec4899',
-      'Vagner Elias':'#0891b2','Eduardo Reis':'#f97316','Eduardo de Deus':'#84cc16',
-      'Rafaela Correa':'#6366f1','Dayane Olivieri':'#14b8a6','Regional':'#e2e8f0'
+      'Angélica Silva':'#16a34a','Cassandra Andrade':'#0891b2','Elaíne Azevedo':'#7c3aed',
+      'Fabiano Cortez':'#ea580c','Francisco Neto':'#0284c7','Joanna Macedo':'#db2777',
+      'Mariana Costa':'#65a30d','Silvia Cunha':'#dc2626','Fernando Maia':'#d97706',
+      'Marco Rocha':'#0d9488','Rafaela Correa':'#6366f1','Saulo Guedes':'#14b8a6',
+      'Thiago Martins':'#f59e0b','Regional':'#e2e8f0'
     };
     // Render cada evento como pill dentro da célula
     const eventPills = dayEvs.slice(0,3).map(e=>{
@@ -1592,18 +1592,20 @@ function consBubble(){
   const tO = FR.reduce((s,f)=>s+D.orc[f],0);
   // Each consultant gets a truly unique color
   const CONS_COLORS = {
-    'Angélica Silva':   '#1d9e75',  // verde
-    'Elaíne Azevedo':   '#185fa5',  // azul
-    'Tassia Novais':    '#f59e0b',  // amarelo
-    'Silvia Cunha':     '#ef4444',  // vermelho
-    'Greice Morais':    '#a855f7',  // roxo
-    'Caroline Pereira': '#ec4899',  // rosa
-    'Vagner Elias':     '#0891b2',  // ciano
-    'Eduardo Reis':     '#f97316',  // laranja
-    'Eduardo de Deus':  '#84cc16',  // verde-limão
-    'Rafaela Correa':   '#6366f1',  // índigo
-    'Dayane Olivieri':  '#14b8a6',  // teal
-    'Regional':         '#e2e8f0',  // branco
+    'Angélica Silva':   '#16a34a',
+    'Cassandra Andrade':'#0891b2',
+    'Elaíne Azevedo':   '#7c3aed',
+    'Fabiano Cortez':   '#ea580c',
+    'Francisco Neto':   '#0284c7',
+    'Joanna Macedo':    '#db2777',
+    'Mariana Costa':    '#65a30d',
+    'Silvia Cunha':     '#dc2626',
+    'Fernando Maia':    '#d97706',
+    'Marco Rocha':      '#0d9488',
+    'Rafaela Correa':   '#6366f1',
+    'Saulo Guedes':     '#14b8a6',
+    'Thiago Martins':   '#f59e0b',
+    'Regional':         '#6b7280'
   };
   const COLORS = Object.values(CONS_COLORS);
 
@@ -1976,7 +1978,6 @@ function addLanc(){
   if(!ind){showError('Selecione a Indicação.');return}
   if(!fra){showError('Selecione a Franquia.');return}
   if(!tipo){showError('Selecione o Tipo de RN (Almoço, Jantar ou Café).');return}
-  if(!medico){showError('⚕️ Informe o Médico Engajado — obrigatório para RN.');document.getElementById('e-med').focus();return}
   if(!mes){showError('Selecione o Mês.');return}
   if(!data){showError('Informe a Data do lançamento.');document.getElementById('e-dat').focus();return}
   if(!val){showError('Informe o Valor Investido.');return}
@@ -2121,7 +2122,6 @@ function renderLanc(){
     <td><span class="bx b-${(l.fra||'').toLowerCase()}">${l.fra||'—'}</span></td>
     <td style="font-size:.72rem">${l.tipo||'—'}${l.tipoAp?' · '+l.tipoAp:''}</td>
     <td style="color:var(--mu);font-size:.7rem">${l.prest||l.soc||'—'}</td>
-    <td title="${l.medico||''}">${l.medico||'—'}</td>
     <td><span class="bx ${sc[l.status]||''}">${l.status||'—'}</span></td>
     <td>${l.mes||'—'}</td>
     <td class="nr" style="white-space:nowrap">${f2(l.val)}</td>
@@ -2153,7 +2153,7 @@ function renderLanc(){
   const sessRows = sessFiltered.map((l,i)=>row(l,'sess',D.sess.indexOf(l),'#1d9e7508')).join('');
   const total    = histFiltered.length + sessFiltered.length;
 
-  tb.innerHTML = (histRows + sessRows) || '<tr><td colspan="10" style="color:var(--mu);text-align:center;padding:1rem">Nenhum registro encontrado</td></tr>';
+  tb.innerHTML = (histRows + sessRows) || '<tr><td colspan="9" style="color:var(--mu);text-align:center;padding:1rem">Nenhum registro encontrado</td></tr>';
 
   const hasFilter = filtro || filtroTipo || filtroFranquia || filtroStatus || filtroMes;
   if(filtroInfo){
@@ -2254,7 +2254,7 @@ function exportWord(){
   const htm=`<html><head><meta charset="UTF-8"><style>body{font-family:Arial;font-size:10pt;margin:2cm}h1{color:#1d9e75;font-size:14pt}h2{color:#185fa5;font-size:11pt;margin-top:16px}table{width:100%;border-collapse:collapse;font-size:8pt;margin-top:5px}th{background:#1a1a2e;color:white;padding:3px 5px;text-align:left}td{padding:3px 5px;border-bottom:1px solid #ddd}tr:nth-child(even)td{background:#f5f5f5}.ft{margin-top:24px;font-size:8pt;color:#888;text-align:center}</style></head><body>
   <h1>DupiHub — Relatório Verba Regional 2026</h1><p style="color:#888;font-size:8pt">GR Marlon Costa · ${new Date().toLocaleDateString('pt-BR')}</p>
   <h2>Resumo por Franquia</h2><table><thead><tr><th>Franquia</th><th>Orçamento</th><th>Pago</th><th>Comprometido</th><th>Saldo</th><th>%</th></tr></thead><tbody>${fr}</tbody></table>
-  <h2>Lançamentos (${allLancs().length})</h2><table><thead><tr><th>Gerente</th><th>Consultor</th><th>Indicação</th><th>Franquia</th><th>Tipo</th><th>Apoio</th><th>Sociedade</th><th>Verba</th><th>Médico</th><th>Status</th><th>Mês</th><th>Data</th><th>Valor</th></tr></thead><tbody>${rows||'<tr><td colspan="13" style="text-align:center">Sem lançamentos</td></tr>'}</tbody></table>
+  <h2>Lançamentos (${allLancs().length})</h2><table><thead><tr><th>Gerente</th><th>Consultor</th><th>Indicação</th><th>Franquia</th><th>Tipo</th><th>Apoio</th><th>Sociedade</th><th>Verba</th><th>Status</th><th>Mês</th><th>Data</th><th>Valor</th></tr></thead><tbody>${rows||'<tr><td colspan="13" style="text-align:center">Sem lançamentos</td></tr>'}</tbody></table>
   <div class="ft">Made by Marlon Costa · DupiHub v2.0 · Dupixent 2026</div>
 <!-- EDIT MODAL -->
 <div id="editModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000000aa;z-index:9999;align-items:center;justify-content:center;padding:1rem">
@@ -2956,10 +2956,11 @@ function renderViagemResumo(){
   // Sort by IDA date
   const sorted = [...VIAGENS].sort((a,b)=>(a.ida||'').localeCompare(b.ida||''));
   const CONS_C2 = {
-    'Angélica Silva':'#1d9e75','Elaíne Azevedo':'#185fa5','Tassia Novais':'#f59e0b',
-    'Silvia Cunha':'#ef4444','Greice Morais':'#a855f7','Caroline Pereira':'#ec4899',
-    'Vagner Elias':'#0891b2','Eduardo Reis':'#f97316','Eduardo de Deus':'#84cc16',
-    'Rafaela Correa':'#6366f1','Dayane Olivieri':'#14b8a6'
+    'Angélica Silva':'#16a34a','Cassandra Andrade':'#0891b2','Elaíne Azevedo':'#7c3aed',
+    'Fabiano Cortez':'#ea580c','Francisco Neto':'#0284c7','Joanna Macedo':'#db2777',
+    'Mariana Costa':'#65a30d','Silvia Cunha':'#dc2626','Fernando Maia':'#d97706',
+    'Marco Rocha':'#0d9488','Rafaela Correa':'#6366f1','Saulo Guedes':'#14b8a6',
+    'Thiago Martins':'#f59e0b','Regional':'#6b7280'
   };
   tb.innerHTML = sorted.map(v => {
     const c = CONS_C2[v.cons] || '#8890b0';
