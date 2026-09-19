@@ -2408,65 +2408,65 @@ function setBanner(msg, color){
   if(b){ b.textContent = msg; b.style.color = color||'#1d9e75'; b.style.borderColor = (color||'#1d9e75')+'55'; b.style.background = (color||'#1d9e75')+'15'; }
 }
 
-// Carrega todos os lançamentos do Google Sheets ao abrir
+// Carrega lançamentos do Google Sheets — aba Lançamentos_S2 via JSONP
 async function loadFromSheets(silent=false){
-  const _url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
-  if(!_url){ if(!silent) setBanner('⚠️ API não configurada.','#ba7517'); return; }
+  const _url = _DEFAULT_API;
   API_URL = _url;
   if(!silent) setBanner('🔄 Carregando dados do servidor...','#185fa5');
+
+  let json;
   try {
-    const res  = await fetch(_url + '?action=getAll', { method:'GET', redirect:'follow' });
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); } catch(pe){
-      if(!silent) setBanner('❌ Resposta inválida da API.','#c62828');
-      return;
-    }
-    const rows = Array.isArray(json) ? json : (json.data || []);
-
-    // 1. Reseta D.sess e todos os totais do zero
-    D.sess = [];
-    ['Resp','Rino'].forEach(f=>{
-      D.pago[f]=0; D.plan[f]=0; D.comp[f]=0;
-      D.saldo[f]=D.orc[f]; D.pct[f]=0;
-      D.monthly[f]=[0,0,0,0,0,0,0,0,0,0,0,0];
-      D.qtr.pago[f]=[0,0,0,0]; D.qtr.plan[f]=[0,0,0,0];
-    });
-    Object.keys(D.cons).forEach(k=>{ D.cons[k]={pago:0,comp:0}; });
-
-    // 2. Processa dados do Sheets — filtra e normaliza
-    D.sess = rows
-      .filter(l => l && l.cons && !_deletedIds.has(String(l.id||'')))
-      .map(l => {
-        let dataStr = String(l.data||'').trim();
-        if(dataStr.match(/^\d{2}\/\d{2}\/\d{4}$/)){
-          const [dd,mm,yy] = dataStr.split('/');
-          dataStr = yy+'-'+mm+'-'+dd;
-        }
-        if(dataStr.length > 10 && dataStr[10] === ' ') dataStr = dataStr.substring(0,10);
-        if(!dataStr.match(/^\d{4}-\d{2}-\d{2}$/)) dataStr = '';
-        return {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
-      });
-
-    // 3. Aplica totais dos dados limpos
-    D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1, l.verba); });
-    renderLanc(); buildAll();
-    // Update API status indicator
-    const lbl = document.getElementById('apiBtnLabel');
-    const ico = document.getElementById('apiBtnIcon');
-    if(lbl){ lbl.textContent='● online'; lbl.style.color='#1d9e75'; }
-    if(ico) ico.setAttribute('stroke','#1d9e75');
-    if(!silent){
-      setBanner('✅ ' + D.sess.length + ' lançamento(s) sincronizado(s).','#1d9e75');
-      setTimeout(()=>setBanner('',''), 3000);
-    }
-  } catch(e){
+    json = await jsonpRequest(_url, {action:'getAll', sheet:'Lançamentos_S2'}, 25000);
+  } catch(netErr){
     const lblE = document.getElementById('apiBtnLabel');
     const icoE = document.getElementById('apiBtnIcon');
     if(lblE){ lblE.textContent='● erro'; lblE.style.color='#c62828'; }
     if(icoE) icoE.setAttribute('stroke','#c62828');
-    if(!silent) setBanner('❌ Falha na conexão: ' + e.message,'#c62828');
+    if(!silent) setBanner('❌ ' + netErr.message,'#c62828');
+    return;
   }
+
+  const rows = Array.isArray(json) ? json : (json.data || []);
+
+  // Reset completo antes de processar
+  D.sess = [];
+  ['Resp','Rino'].forEach(f=>{
+    D.pago[f]=0; D.plan[f]=0; D.comp[f]=0;
+    D.saldo[f]=D.orc[f]; D.pct[f]=0;
+    D.monthly[f]=[0,0,0,0,0,0,0,0,0,0,0,0];
+    D.qtr.pago[f]=[0,0,0,0]; D.qtr.plan[f]=[0,0,0,0];
+  });
+  Object.keys(D.cons).forEach(k=>{ D.cons[k]={pago:0,comp:0}; });
+
+  // Processa e normaliza dados do Sheets
+  D.sess = rows
+    .filter(l => l && l.cons && !_deletedIds.has(String(l.id||'')))
+    .map(l => {
+      let dataStr = String(l.data||'').trim();
+      if(dataStr.match(/^\d{2}\/\d{2}\/\d{4}$/)){
+        const [dd,mm,yy] = dataStr.split('/');
+        dataStr = yy+'-'+mm+'-'+dd;
+      }
+      if(dataStr.length > 10 && dataStr[10] === ' ') dataStr = dataStr.substring(0,10);
+      if(!dataStr.match(/^\d{4}-\d{2}-\d{2}$/)) dataStr = '';
+      return {...l, val: parseFloat(l.val)||0, data: dataStr, id: String(l.id||'')};
+    });
+
+  // Aplica totais
+  D.sess.forEach(l=>{ if(l.fra && l.val) updateTotals(l.fra, l.cons, l.mes, l.val, l.status, +1, l.verba); });
+
+  // Badge online
+  const lbl = document.getElementById('apiBtnLabel');
+  const ico = document.getElementById('apiBtnIcon');
+  if(lbl){ lbl.textContent='● online'; lbl.style.color='#1d9e75'; }
+  if(ico) ico.setAttribute('stroke','#1d9e75');
+  if(!silent){
+    setBanner('✅ ' + D.sess.length + ' lançamento(s) carregado(s) da Lançamentos_S2.','#1d9e75');
+    setTimeout(()=>setBanner('',''), 3000);
+  }
+
+  try{ renderLanc(); }catch(e){ console.error('renderLanc:',e); }
+  try{ buildAll(); }catch(e){ console.error('buildAll:',e); }
 }
 
 // Envia novo lançamento para o Google Sheets
