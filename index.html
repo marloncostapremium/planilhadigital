@@ -2408,6 +2408,43 @@ function setBanner(msg, color){
   if(b){ b.textContent = msg; b.style.color = color||'#1d9e75'; b.style.borderColor = (color||'#1d9e75')+'55'; b.style.background = (color||'#1d9e75')+'15'; }
 }
 
+// ── JSONP — contorna CORS do Google Apps Script ──────────────────────────────
+function jsonpRequest(url, params, timeoutMs){
+  timeoutMs = timeoutMs || 20000;
+  return new Promise(function(resolve, reject){
+    var cbName = '_gasCallback_' + Date.now() + '_' + Math.floor(Math.random()*9999);
+    var timer = setTimeout(function(){
+      cleanup();
+      reject(new Error('Timeout — GAS não respondeu em ' + (timeoutMs/1000) + 's'));
+    }, timeoutMs);
+    function cleanup(){
+      clearTimeout(timer);
+      try{ delete window[cbName]; }catch(e){}
+      var el = document.getElementById(cbName);
+      if(el && el.parentNode) el.parentNode.removeChild(el);
+    }
+    window[cbName] = function(data){
+      cleanup();
+      resolve(data);
+    };
+    var qs = 'callback=' + encodeURIComponent(cbName);
+    if(params){
+      Object.keys(params).forEach(function(k){
+        qs += '&' + k + '=' + encodeURIComponent(String(params[k]==null?'':params[k]));
+      });
+    }
+    var script = document.createElement('script');
+    script.id = cbName;
+    script.async = true;
+    script.src = url + '?' + qs;
+    script.onerror = function(){
+      cleanup();
+      reject(new Error('JSONP falhou — verifique a URL do GAS'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
 // Carrega lançamentos do Google Sheets — aba Lançamentos_S2 via JSONP
 async function loadFromSheets(silent=false){
   const _url = _DEFAULT_API;
