@@ -2190,9 +2190,7 @@ function saveOrc(){
       rhyno: D.orc.Rhyno,
       gastro:D.orc.Gastro
     };
-    const qs = Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-    fetch(url+'?'+qs,{method:'GET',redirect:'follow'})
-      .then(r=>r.text())
+    jsonpRequest(url, params, 15000)
       .then(()=>setBanner('✅ Budget salvo no Google Sheets!','#1d9e75'))
       .catch(()=>setBanner('✅ Budget atualizado localmente!','#1d9e75'));
   } else {
@@ -2202,14 +2200,42 @@ function saveOrc(){
 }
 
 function loadBudget(){
-  // Carrega budget do localStorage se disponível
+  // 1. Carrega do localStorage imediatamente (para não ficar zerado enquanto busca)
   try {
     const saved = localStorage.getItem('dupihub_budget');
     if(saved){
       const b = JSON.parse(saved);
-      FR.forEach(f=>{ if(b[f]) { D.orc[f]=b[f]; D.saldo[f]=D.orc[f]-D.comp[f]; D.pct[f]=D.comp[f]/(D.orc[f]||1); }});
+      FR.forEach(f=>{ if(b[f]){ D.orc[f]=b[f]; D.saldo[f]=D.orc[f]-D.comp[f]; D.pct[f]=D.comp[f]/(D.orc[f]||1); }});
     }
   } catch(e){}
+  // 2. Busca do Sheets para garantir valor atualizado
+  loadBudgetFromSheets();
+}
+
+async function loadBudgetFromSheets(){
+  try {
+    const json = await jsonpRequest(_DEFAULT_API, {action:'getBudget'}, 15000);
+    if(json && json.status==='ok' && json.data){
+      const b = json.data;
+      FR.forEach(f=>{
+        if(b[f] && parseFloat(b[f]) > 0){
+          D.orc[f] = parseFloat(b[f]);
+          D.saldo[f] = D.orc[f] - D.comp[f];
+          D.pct[f] = D.comp[f] / (D.orc[f]||1);
+        }
+      });
+      // Salva no localStorage
+      localStorage.setItem('dupihub_budget', JSON.stringify(D.orc));
+      // Atualiza UI
+      try{ orcForm(); }catch(e){}
+      try{ kpis(); }catch(e){}
+      try{ gauges(); }catch(e){}
+      try{ thermo(); }catch(e){}
+      try{ waterfall(); }catch(e){}
+    }
+  } catch(e){
+    console.error('loadBudgetFromSheets error:', e);
+  }
 }
 
 function resetSessao(){if(!confirm('Recarregar todos os dados do servidor?'))return;_deletedIds.clear();loadFromSheets();}
@@ -2510,16 +2536,8 @@ async function loadFromSheets(silent=false){
 // ── API GOOGLE SHEETS ────────────────────────────────────────────────────────
 // Usa GET com parâmetros individuais — mais confiável com Apps Script + Safari
 async function gasRequest(params){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
-  if(!url) return null;
   try {
-    const qs = Object.entries(params)
-      .map(([k,v])=> k+'='+encodeURIComponent(String(v===null||v===undefined?'':v)))
-      .join('&');
-    const fullUrl = url + '?' + qs;
-    const res = await fetch(fullUrl, { method:'GET', redirect:'follow' });
-    const text = await res.text();
-    try{ return JSON.parse(text); }catch(e){ return {status:'ok'}; }
+    return await jsonpRequest(_DEFAULT_API, params, 15000);
   } catch(e){
     console.error('gasRequest error:', e);
     return null;
@@ -2558,7 +2576,7 @@ async function apiAdd(lancamento){
 
   try {
     // Mesma abordagem do gasRequest que funciona — sem mode:'cors'
-    const res  = await fetch(fullUrl, { method:'GET', redirect:'follow' });
+    await jsonpRequest(url, params, 15000);
     const text = await res.text();
     let json;
     try { json = JSON.parse(text); } catch(e) {}
@@ -2620,9 +2638,7 @@ async function apiDelete(id){
   if(!url) return;
   try {
     const fullUrl = url + '?action=delete&id=' + encodeURIComponent(id);
-    const res = await fetch(fullUrl, { method:'GET', redirect:'follow' });
-    const text = await res.text();
-    let json; try{ json=JSON.parse(text); }catch(e){}
+    const json = await jsonpRequest(url, {action:'delete', id:id, sheet:'Lançamentos_S2'}, 15000);
     if(json && json.status==='ok'){
       setBanner('✅ Excluído do Google Sheets!','#1d9e75');
       setTimeout(()=>setBanner('',''),2500);
@@ -3022,49 +3038,58 @@ function vgDayDetail(d){var ano=_vgCalAno,mes=_vgCalMes;var pad=function(n){retu
 
 // ── API VIAGENS ───────────────────────────────────────────────────────────────
 async function apiAddViagem(v){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
-  if(!url) return;
   try {
     const params = {
       action:'addViagem', id:v.id, cons:v.cons, ger:v.ger,
       ida:v.ida, ret:v.ret, dias:v.dias, uf:v.uf,
       cidade:v.cidade||'', tipo:v.tipo||'', ausencia:v.ausencia||'', obs:v.obs||''
     };
-    const qs = Object.entries(params).map(([k,v2])=>k+'='+encodeURIComponent(String(v2||''))).join('&');
-    await fetch(url+'?'+qs, {method:'GET', redirect:'follow'});
+    await jsonpRequest(_DEFAULT_API, params, 15000);
   } catch(e){ console.error('apiAddViagem error:', e); }
 }
 
 async function apiDeleteViagem(id){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
-  if(!url || !id) return;
+  if(!id) return;
   try {
-    await fetch(url+'?action=deleteViagem&id='+encodeURIComponent(id), {method:'GET', redirect:'follow'});
+    await jsonpRequest(_DEFAULT_API, {action:'deleteViagem', id:id}, 15000);
   } catch(e){ console.error('apiDeleteViagem error:', e); }
 }
 
 async function loadViagensFromSheets(){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
-  if(!url) return;
+  const url = _DEFAULT_API;
   try {
-    setBanner('🔄 Carregando viagens...','#185fa5');
-    const res  = await fetch(url+'?action=getAllViagens', {method:'GET', redirect:'follow', mode:'cors'});
-    const text = await res.text();
-    let json; try{ json=JSON.parse(text); }catch(e){ return; }
+    const json = await jsonpRequest(url, {action:'getAllViagens'}, 25000);
     if(json && json.status==='ok' && Array.isArray(json.data) && json.data.length > 0){
-      // Merge: keep local viagens not yet on server + server viagens
-      const serverIds = new Set(json.data.map(v=>v.id));
-      const localOnly = VIAGENS.filter(v => !serverIds.has(v.id));
-      VIAGENS = [...json.data, ...localOnly];
+      // Normaliza datas YYYY-MM-DD e recalcula dias
+      const normalized = json.data.map(v => {
+        const fixDate = s => {
+          s = String(s||'').trim();
+          if(s.match(/^\d{4}-\d{2}-\d{2}$/)) return s;
+          return '';
+        };
+        const ida = fixDate(v.ida);
+        const ret = fixDate(v.ret);
+        let dias = parseInt(v.dias)||0;
+        if(ida && ret){
+          const d1 = new Date(ida+'T12:00:00');
+          const d2 = new Date(ret+'T12:00:00');
+          dias = Math.round((d2-d1)/(1000*60*60*24));
+        }
+        return {...v, ida, ret, dias};
+      });
+      // Merge: mantém viagens locais não ainda no servidor
+      const serverIds = new Set(normalized.map(v=>String(v.id)));
+      const localOnly = VIAGENS.filter(v => !serverIds.has(String(v.id)));
+      VIAGENS = [...normalized, ...localOnly];
       localStorage.setItem('dupihub_viagens', JSON.stringify(VIAGENS));
       setBanner('✅ '+VIAGENS.length+' viagem(ns) carregada(s).','#1d9e75');
-    } else {
-      setBanner('','#1d9e75');
+      setTimeout(()=>setBanner('',''),3000);
     }
     renderViagemTabela();
     renderViagemCal();
   } catch(e){
     console.error('loadViagensFromSheets error:', e);
+    setBanner('❌ Erro ao carregar viagens: '+e.message,'#c62828');
   }
 }
 
