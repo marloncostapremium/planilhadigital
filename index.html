@@ -2380,12 +2380,12 @@ function exportPDF(){window.print();}
 // ── INTEGRAÇÃO GOOGLE SHEETS ──────────────────────────────────────────────────
 // Cole aqui a URL gerada pelo Google Apps Script após implantar:
 const _DEFAULT_API = 'https://script.google.com/macros/s/AKfycbzbxo8svIsFE7knu4btCzgU7LvOvRyw0ajYvtYXWMuCM3djC0AKtihd3B950FvbKsHe/exec';
-// Limpa dados antigos do localStorage (força reset para S2 apenas)
-const _CACHE_VERSION = 'v4_clean';
+// Reset total do localStorage — apaga TODOS os dados antigos exceto senha salva
+const _CACHE_VERSION = 'v5_final';
 if(localStorage.getItem('dupihub_cache_version') !== _CACHE_VERSION){
-  localStorage.removeItem('dupihub_sess');
-  localStorage.removeItem('dupihub_lancs');
-  localStorage.removeItem('dupihub_data');
+  const _savedAuth = localStorage.getItem('dupihub_app_auth');
+  localStorage.clear();
+  if(_savedAuth) localStorage.setItem('dupihub_app_auth', _savedAuth);
   localStorage.setItem('dupihub_cache_version', _CACHE_VERSION);
 }
 localStorage.setItem('dupihub_api_url', _DEFAULT_API);
