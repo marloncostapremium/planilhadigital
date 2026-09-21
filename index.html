@@ -2497,9 +2497,17 @@ async function loadFromSheets(silent=false){
   });
   Object.keys(D.cons).forEach(k=>{ D.cons[k]={pago:0,comp:0}; });
 
-  // Processa e normaliza dados do Sheets
+  // Processa e normaliza dados do Sheets — deduplicando por ID
+  const seenIds = new Set();
   D.sess = rows
-    .filter(l => l && l.cons && !_deletedIds.has(String(l.id||'')))
+    .filter(l => {
+      if(!l || !l.cons) return false;
+      if(_deletedIds.has(String(l.id||''))) return false;
+      const id = String(l.id||'');
+      if(id && seenIds.has(id)) return false; // Remove duplicatas
+      if(id) seenIds.add(id);
+      return true;
+    })
     .map(l => {
       let dataStr = String(l.data||'').trim();
       if(dataStr.match(/^\d{2}\/\d{2}\/\d{4}$/)){
