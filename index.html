@@ -210,9 +210,9 @@ footer strong{color:var(--cyan)}
   </div>
 
   <!-- CONSUMO CUMULATIVO S2 -->
-  <div class="stit" style="margin-top:1.5rem">Consumo Cumulativo S2 — RN &amp; Speaker Meetings (Jul/2026 em diante)</div>
+  <div class="stit" style="margin-top:1.5rem">Consumo Cumulativo S2 — Acumulado RNs (Jul/2026 em diante)</div>
   <div class="cc" style="margin-bottom:1rem">
-    <div class="ct">Gasto acumulado até hoje — por franquia (Pago + Planejado)</div>
+    <div class="ct">Acumulado de Refeições de Negócios (RN) por mês — Resp &amp; Rino</div>
     <div style="height:240px"><canvas id="cCumulS2"></canvas></div>
     <div id="cumulS2Info" style="display:flex;gap:1.5rem;margin-top:.6rem;flex-wrap:wrap;font-size:.75rem"></div>
   </div>
@@ -941,7 +941,7 @@ function buildCumulS2(){
   const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
   // Filtra apenas RN a partir de Jul/2026
-  const RN_TIPOS = ['Almoço','Jantar','Café','Refeição de Negócios (RN)'];
+  const RN_TIPOS = ['Almoço','Jantar','Café']; // Apenas RNs — sem Speaker Meetings
   const lancs = allLancsBudget().filter(l=>{
     if(!l.data || typeof l.data !== 'string') return false;
     if(!RN_TIPOS.includes(l.tipo)) return false;
@@ -1448,7 +1448,7 @@ function consDonutsFranquia(){
   if(!container) return;
 
   // Regra: Almoço, Jantar e Café são tratados como RN no painel
-  const RN_TIPOS = ['Almoço','Jantar','Café','Refeição de Negócios (RN)'];
+  const RN_TIPOS = ['Almoço','Jantar','Café']; // Apenas RNs — sem Speaker Meetings
   const TIPOS = ['Speaker Meetings','Coffee Break','Apoio Sociedade','Apoio Prestador','Refeição de Negócios (RN)'];
   const FRANQUIAS = ['Resp','Rino'];
   const FR_COLORS  = { Resp:'#185fa5', Rino:'#0891b2' };
