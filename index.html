@@ -2558,9 +2558,14 @@ async function gasRequest(params){
 }
 
 async function apiAdd(lancamento){
-  const url = localStorage.getItem('dupihub_api_url') || _DEFAULT_API;
-  if(!url){ setBanner('⚠️ API não configurada.','#ba7517'); return null; }
-  API_URL = url;
+  const url = _DEFAULT_API;
+
+  // Lock por conteúdo — evita envio duplicado
+  const lockKey = [lancamento.cons,lancamento.tipo,lancamento.mes,lancamento.data,lancamento.val].join('|');
+  if(window._apiAddLock && window._apiAddLock.has(lockKey)) return null;
+  if(!window._apiAddLock) window._apiAddLock = new Set();
+  window._apiAddLock.add(lockKey);
+  setTimeout(()=> window._apiAddLock.delete(lockKey), 10000);
 
   const params = {
     action:'add',
@@ -2579,51 +2584,23 @@ async function apiAdd(lancamento){
     val:    lancamento.val    ||0
   };
 
-  const qs = Object.entries(params)
-    .map(([k,v])=>k+'='+encodeURIComponent(String(v??'')))
-    .join('&');
-  const fullUrl = url + '?' + qs;
-  const localId = 'L' + Date.now();
-
+  const localId = lancamento.id || ('L' + Date.now());
   setBanner('🔄 Enviando para Google Sheets...','#185fa5');
 
   try {
-    // Mesma abordagem do gasRequest que funciona — sem mode:'cors'
-    await jsonpRequest(url, params, 15000);
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); } catch(e) {}
+    const json = await jsonpRequest(url, params, 20000);
     if(json && json.status === 'ok'){
       setBanner('✅ Salvo no Google Sheets!','#1d9e75');
       setTimeout(()=>setBanner('',''), 3000);
       return json.id || localId;
-    } else {
-      setBanner('⚠️ Resposta inesperada do servidor.','#ba7517');
-      return localId;
     }
+    return localId;
   } catch(err){
-    // Fallback: XMLHttpRequest (Safari mais antigo)
-    try {
-      const xhrText = await new Promise((res, rej)=>{
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', fullUrl);
-        xhr.onload  = ()=> res(xhr.responseText);
-        xhr.onerror = ()=> rej(new Error('XHR falhou'));
-        xhr.send();
-      });
-      let json2;
-      try { json2 = JSON.parse(xhrText); } catch(e) {}
-      if(json2 && json2.status === 'ok'){
-        setBanner('✅ Salvo no Google Sheets!','#1d9e75');
-        setTimeout(()=>setBanner('',''), 3000);
-        return json2.id || localId;
-      }
-    } catch(err2){
-      setBanner('❌ Erro de conexão: ' + err2.message,'#c62828');
-    }
+    setBanner('❌ Erro: ' + err.message,'#c62828');
     return localId;
   }
 }
+
 
 async function apiEdit(id, lancamento){
   if(!API_URL || !id) return;
