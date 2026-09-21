@@ -1903,7 +1903,11 @@ function updateTotals(fra, cons, mes, val, status, signal, verba){
   }
 }
 
+let _addEventoBusy = false;
 function addEvento(){
+  if(_addEventoBusy) return;
+  _addEventoBusy = true;
+  setTimeout(()=>{ _addEventoBusy = false; }, 5000);
   const g = id => document.getElementById(id).value;
   const ger    = g('ev-ger');
   const cons   = g('ev-cons');
@@ -1963,7 +1967,11 @@ function addEvento(){
   });
 }
 
+let _addLancBusy = false;
 function addLanc(){
+  if(_addLancBusy) return;
+  _addLancBusy = true;
+  setTimeout(()=>{ _addLancBusy = false; }, 5000);
   const g=id=>document.getElementById(id).value;
   const ger=g('e-ger'),cons=g('e-cons'),ind=g('e-ind'),fra=g('e-fra');
   const tipo=g('e-tipo'),verba=g('e-vrb');
@@ -1979,7 +1987,8 @@ function addLanc(){
   if(!mes){showError('Selecione o Mês.');return}
   if(!data){showError('Informe a Data do lançamento.');document.getElementById('e-dat').focus();return}
   if(!val){showError('Informe o Valor Investido.');return}
-  const lanc = {ger,cons,ind,fra,tipo,tipoAp:'',soc:'',verba,medico,status,mes,data,val,_tipo_origem:'rn',_id:null};
+  const _localId = 'L' + Date.now();
+  const lanc = {ger,cons,ind,fra,tipo,tipoAp:'',soc:'',verba,medico,status,mes,data,val,_tipo_origem:'rn',_id:_localId,id:_localId};
   D.sess.push(lanc);
   updateTotals(fra, cons, mes, val, status, +1, verba);
   ['e-ind','e-tipo','e-vrb','e-mes','e-dat'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';if(el.disabled!==undefined)el.disabled=false;}});
